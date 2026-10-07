@@ -1,0 +1,40 @@
+# Local compiler output
+build/
+dist/
+out/
+*.o
+*.elf
+*.map
+*.dSYM/
+
+# Python and editor files
+__pycache__/
+*.py[cod]
+.DS_Store
+*.swp
+*.swo
+
+# Local runtime configuration and logs
+install.conf
+installer.log
+*.log
+*.tr-stage
+*.tr-previous
+
+# Game archives and assets are not distributed in this repository
+*.zip
+*.rar
+*.7z
+*.pkg
+*.cas
+*.toc
+*.exfat
+*.ffpfsc
+*.vhash
+ampr_emu.index
+param.json
+
+# Native launcher and .NET generated files
+.build/
+bin/
+obj/
