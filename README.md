@@ -46,7 +46,15 @@ Kaynak kod ve yayınlanan araçlar: [GitHub sürümleri](https://github.com/hmyi
 
 Bu derleme kişisel derleme yollarını içermez. Yedi nesne dosyasının çalıştırılabilir bölümleri önceki PS5 testinden geçen derlemeyle birebir aynı; yeni ikilinin konsolda yeniden testi henüz yapılmadı. [Derleme karşılaştırması](tests/build-normalization-results.txt).
 
-Türkçe veri ZIP'i bu depoda ve GitHub sürümlerinde bulunmaz.
+Türkçe veri ZIP'i bu depoda ve GitHub sürümlerinde bulunmaz. [MediaFire'dan indirin — yaklaşık 1,37 GB](https://www.mediafire.com/file/y81auk6wpsdlbw8/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip/file). ZIP'i açmadan ve adını değiştirmeden kullanın; içindeki eski metinler PC ile manuel alternatifi anlatır, ELF için [güncel rehberi](docs/KURULUM.md) izleyin.
+
+Ses ZIP'i SHA256:
+
+```text
+78d3a21b8accf760dcef0328be29e0d715df2af8080f6b4bbf0bf78e054bf3f4
+```
+
+[MCPSP paylaşım konusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/) 8 Ekim 2026'da oluşturuldu; ilk paylaşımda moderatör onayı bekliyor.
 
 ## Kurucu ne yapar?
 
