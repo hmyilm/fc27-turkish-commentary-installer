@@ -37,7 +37,8 @@
 #define TITLE "PPSA34015"
 #define LOG_LIMIT (128u * 1024u)
 #define CREATED_DIR_MAX 128
-#define DISCOVERY_MAX_DEPTH 4u
+#define DISCOVERY_USB_MAX_DEPTH 4u
+#define DISCOVERY_DATA_MAX_DEPTH 32u
 #define DISCOVERY_MAX_DIRS 4096u
 #define DISCOVERY_MAX_ENTRIES 32768u
 
@@ -867,7 +868,22 @@ static int walk_game_directories(const char *path, unsigned depth,
     return result;
 }
 
-static int scan_game_root(const char *root, char found[TR_PATH], char *err) {
+#ifdef TR_DISCOVERY_TEST
+/* Test-only prefix redirects the real /data and /mnt/usbN root selection
+   into a temporary host fixture. It is absent from the released installer. */
+static const char *discovery_test_prefix;
+#endif
+
+static int scan_game_root(const char *root, unsigned max_depth,
+                           char found[TR_PATH], char *err) {
+#ifdef TR_DISCOVERY_TEST
+    char mapped[TR_PATH];
+    if (discovery_test_prefix) {
+        if (path_join(mapped, discovery_test_prefix, root + 1, err))
+            return -1;
+        root = mapped;
+    }
+#endif
     struct stat st;
     if (lstat(root, &st)) {
         if (errno == ENOENT || errno == ENOTDIR)
@@ -886,21 +902,18 @@ static int scan_game_root(const char *root, char found[TR_PATH], char *err) {
     if (redirected)
         return 0;
     game_search search = {0, 0, DISCOVERY_MAX_DIRS, DISCOVERY_MAX_ENTRIES,
-                          DISCOVERY_MAX_DEPTH, st.st_dev, found};
+                          max_depth, st.st_dev, found};
     return walk_game_directories(root, 0, &search, err);
 }
 
 static int discover_game(char out[TR_PATH], char *err) {
-    const char *roots[] = {"/data/etaHEN/games", "/data/OnionHEN/games",
-                           "/data/games", "/data/PS5"};
     out[0] = 0;
-    for (size_t r = 0; r < sizeof(roots) / sizeof(roots[0]); ++r)
-        if (scan_game_root(roots[r], out, err))
-            return -1;
+    if (scan_game_root("/data", DISCOVERY_DATA_MAX_DEPTH, out, err))
+        return -1;
     for (int usb = 0; usb < 8; ++usb) {
         char root[TR_PATH];
         snprintf(root, sizeof(root), "/mnt/usb%d", usb);
-        if (scan_game_root(root, out, err))
+        if (scan_game_root(root, DISCOVERY_USB_MAX_DEPTH, out, err))
             return -1;
     }
     if (!out[0])
@@ -1374,7 +1387,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signal_cancel);
     signal(SIGTERM, signal_cancel);
     start_log();
-    note("FC27 TR v0.1.1-beta baslatiliyor.");
+    note("FC27 TR v0.1.1-beta (USB+DATA) baslatiliyor.");
 #ifdef TR_HOST_TEST
     const char *fail_env = getenv("TR_FAIL_COMMIT");
     if (fail_env) {
