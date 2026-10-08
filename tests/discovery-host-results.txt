@@ -1,0 +1,61 @@
+PASS native USB0 root allowed
+PASS native USB0 arbitrary child allowed
+PASS native USB1 root allowed
+PASS native USB1 arbitrary child allowed
+PASS native USB2 root allowed
+PASS native USB2 arbitrary child allowed
+PASS native USB3 root allowed
+PASS native USB3 arbitrary child allowed
+PASS native USB4 root allowed
+PASS native USB4 arbitrary child allowed
+PASS native USB5 root allowed
+PASS native USB5 arbitrary child allowed
+PASS native USB6 root allowed
+PASS native USB6 arbitrary child allowed
+PASS native USB7 root allowed
+PASS native USB7 arbitrary child allowed
+PASS native data path allowed
+PASS native image or unsupported path rejected /mnt/sandbox/PPSA34015/app0
+PASS native image or unsupported path rejected /mnt/pfs/game
+PASS native image or unsupported path rejected /app0
+PASS native image or unsupported path rejected /mnt/usb8/game
+PASS native image or unsupported path rejected /mnt/usb00/game
+PASS native image or unsupported path rejected /mnt/usb0-image
+PASS native image or unsupported path rejected /database/game
+PASS root
+PASS arbitrary basename
+PASS games folder
+PASS PS5 folder
+PASS etaHEN folder
+PASS OnionHEN folder
+PASS mixed case folders
+PASS four levels including wrapper
+PASS depth five excluded from automatic scan
+PASS manual path accepts deeper arbitrary name
+PASS multiple compatible folders require choice
+PASS manual path resolves duplicate choice
+PASS duplicates across roots require choice
+PASS same canonical root twice is one game
+PASS name alone cannot select wrong game
+PASS manual wrong title still rejected
+PASS unsupported version ignored
+PASS manual unsupported version rejected
+PASS missing index not a candidate
+PASS manual missing index rejected
+PASS missing Data/Ps5 not a candidate
+PASS symlink game is not followed
+PASS manual symlink game rejected
+PASS manual trailing slash cannot bypass symlink rejection
+PASS symlink scan root not followed
+PASS symlink root ancestor not followed
+PASS symlink Data rejected
+PASS symlink sce_sys rejected
+PASS symlink ampr_emu.index rejected
+PASS game content is never recursively searched
+PASS other game content also not searched
+PASS volume metadata skipped
+PASS directory budget fails safely
+PASS entry budget fails safely
+PASS missing root ignored
+PASS image file not a game folder
+PASS 60 discovery cases; no game files or console were used.
