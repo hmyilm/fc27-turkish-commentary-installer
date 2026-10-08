@@ -1,0 +1,16 @@
+miniz 3.1.0 (MIT), commit 174573d60290f447c13a2b1b3405de2b96e27d6c:
+- Upstream source files are unmodified.
+- miniz_export.h is a locally generated empty static-library export macro.
+- Build with MINIZ_NO_STDIO, MINIZ_NO_TIME, MINIZ_NO_ZLIB_APIS,
+  MINIZ_NO_DEFLATE_APIS, MINIZ_NO_ZLIB_COMPATIBLE_NAMES.
+  NO_DEFLATE automatically disables archive-writing APIs.
+- Do not define MINIZ_DISABLE_ZIP_READER_CRC32_CHECKS.
+
+SHA256 by Brad Conte (public domain), commit cfbde48414baacf51fc7c74f275190881f037d32:
+- Standard string.h replaces the nonstandard memory.h include.
+- Byte-to-word shifts explicitly cast to unsigned WORD before shifting to
+  avoid signed integer left-shift undefined behavior.
+- sha256_update loop index is size_t, matching its length argument.
+- No algorithm or hash-output changes.
+
+UPSTREAM_SOURCES.txt records downloaded original SHA256 digests and URLs.

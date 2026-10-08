@@ -1,0 +1,26 @@
+Pinned vendor sources downloaded 2026-10-07.
+
+miniz/miniz.c: f23204efee2bfaffb72a974d2e28c64c3c1d9787144b5c5890f129c465e467bd
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz.c
+miniz/miniz.h: 232abb0b807fd4962a8e61822459dd49baecb61d0e557f23497732978640f6a7
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz.h
+miniz/miniz_common.h: 6320fa10a5d21db9f78594d92745bc27593c1e6bed657104c22da0a9bd687b49
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_common.h
+miniz/miniz_tdef.h: d62da02953c3834dfcbde4db026c6d9345013ef9b0e53185131016a3a4e48c33
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_tdef.h
+miniz/miniz_tinfl.c: ff9cc5426df23a78070b5b8fa2dcb7aea68faac466169a883b4ffb8727532350
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_tinfl.c
+miniz/miniz_tinfl.h: da4850920fdf09f8877d9affabe1ebba1852ce4b1ebbd121f2ba7a7ea8e57e5d
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_tinfl.h
+miniz/miniz_zip.c: 3c1f90797c02ddc9d6bfcdf7079f5ea6f6212f257ed8745f2334dd021d697669
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_zip.c
+miniz/miniz_zip.h: b062a5def545445c73fd1d664e35a89165dfb0d996ab848f507244e819cfcf04
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/miniz_zip.h
+miniz/LICENSE: 0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3
+  https://raw.githubusercontent.com/richgel999/miniz/174573d60290f447c13a2b1b3405de2b96e27d6c/LICENSE
+sha256/sha256.c: 4cbc93d30c28cee2a056d6f52cbce6e66ff9450f1d712ee4f59761b9b4486fad
+  https://raw.githubusercontent.com/B-Con/crypto-algorithms/cfbde48414baacf51fc7c74f275190881f037d32/sha256.c
+sha256/sha256.h: a946e621775fd8251624e77d19f25407c4b6074ab780027e5797b77c7acf79b5
+  https://raw.githubusercontent.com/B-Con/crypto-algorithms/cfbde48414baacf51fc7c74f275190881f037d32/sha256.h
+sha256/README.md: e3e04bbc27f68266c02af3a3ef6cb5e1bd217a3c92f2893b66d9f2220f732460
+  https://raw.githubusercontent.com/B-Con/crypto-algorithms/cfbde48414baacf51fc7c74f275190881f037d32/README.md
