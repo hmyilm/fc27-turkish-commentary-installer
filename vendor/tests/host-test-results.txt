@@ -1,0 +1,18 @@
+Host streaming verification, 2026-10-07 (macOS arm64, clang -O2):
+ZIP: FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
+All 10 compiled-in assets streamed fully to /dev/null and passed miniz CRC32 + compiled SHA256.
+Verified uncompressed total: 1,503,216,738 bytes.
+Progress callbacks checked for monotonic bytes/exact final count.
+Existing-file helper: correct file accepted, changed byte rejected, truncated size rejected.
+Elapsed: 10.66 s real, 10.02 s user, 0.26 s sys.
+Maximum resident set size: 2,015,232 bytes.
+Peak memory footprint: 1,540,456 bytes.
+No PS5 writes or game assets are included in this test source/results.
+
+Compile:
+clang -std=c11 -D_DARWIN_C_SOURCE -O2 -Wall -Wextra \
+ -DMINIZ_NO_STDIO -DMINIZ_NO_TIME -DMINIZ_NO_ZLIB_APIS \
+ -DMINIZ_NO_DEFLATE_APIS -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES \
+ -Isrc -Ivendor/miniz -Ivendor/sha256 vendor/tests/bundle_host_test.c \
+ src/assets.c src/bundle.c vendor/miniz/miniz.c vendor/miniz/miniz_tinfl.c \
+ vendor/miniz/miniz_zip.c vendor/sha256/sha256.c -o /tmp/tr_bundle_host_test

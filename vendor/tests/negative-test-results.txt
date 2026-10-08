@@ -1,0 +1,4 @@
+{'file': 'missing.zip', 'exit': 1, 'message': 'OPEN FAIL: Missing ZIP asset: Data/Ps5/commentaryfull_tur_tr.toc'}
+{'file': 'duplicate.zip', 'exit': 1, 'message': 'OPEN FAIL: Duplicate ZIP asset: Data/Ps5/commentaryfull_tur_tr.toc'}
+{'file': 'wrong-size.zip', 'exit': 1, 'message': 'OPEN FAIL: ZIP asset size/type mismatch: Data/Ps5/commentaryfull_tur_tr.toc'}
+{'file': 'wrong-crc.zip', 'exit': 1, 'message': 'EXTRACT FAIL: ZIP extraction/CRC failed for Data/Ps5/commentaryfull_tur_tr.toc: decompression failed or archive is corrupted'}
