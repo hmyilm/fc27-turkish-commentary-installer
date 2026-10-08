@@ -9,7 +9,7 @@ if [ "${1:-}" = "--host" ]; then
     task_output="$task_source_dir/build/FC27_TR_KUR_host"
     task_object_dir="$task_source_dir/build/host-objects"
 elif [ "$#" -ne 0 ]; then
-    printf '%s\n' 'Usage: ./build.sh [--host]' >&2
+    printf '%s\n' 'Usage: sh ./build.sh [--host]' >&2
     exit 2
 else
     if [ -z "${PS5_PAYLOAD_SDK:-}" ] || [ ! -x "$PS5_PAYLOAD_SDK/bin/prospero-clang" ]; then
@@ -31,6 +31,7 @@ for task_relative in src/installer.c src/assets.c src/bundle.c \
         vendor/miniz/*) task_extra_warning=-Wno-unused-function ;;
     esac
     "$task_sdk_cc" -O2 -Wall -Wextra -std=gnu11 $task_host_define $task_extra_warning \
+        "-ffile-prefix-map=$task_source_dir=." \
         -DMINIZ_NO_STDIO -DMINIZ_NO_TIME -DMINIZ_NO_ZLIB_APIS \
         -DMINIZ_NO_DEFLATE_APIS -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES \
         -I "$task_source_dir/src" -I "$task_source_dir/vendor/miniz" \

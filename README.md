@@ -10,7 +10,7 @@ PPSA34015 için yerel PS5 ELF kurucusu. Hazır Türkçe spiker ZIP'ini USB'den v
 | --- | --- |
 | PPSA34015 / v01.000.004 | Kaynak kurulumda çevrimdışı maç ve Türkçe spiker çalıştı. ZIP'ten yeniden kurulum sonrası maç da kullanıcı tarafından doğrulandı. |
 | PPSA34015 / v01.000.003 | Kurucu kabul eder; bu sürümde oyun içi test yapılmadı. |
-| Native ELF kurucusu | PS5 üzerinde 10 dosyanın hash kontrolü ve eksiltilen bir dosya/indeks kaydının yeniden kurulması geçti. Ayrıntılar [test notlarında](docs/TEST_DURUMU.md). |
+| Native ELF kurucusu | 7 Ekim derlemesi PS5 dosya/indeks testlerini geçti. 8 Ekim yayın derlemesinde yalnız derleme yolu metinleri sadeleştirildi; yeni ikili için konsol testi bekliyor. Ayrıntılar [test notlarında](docs/TEST_DURUMU.md). |
 | PKG başlatıcısı | Hazırlanıyor; ELF test sonuçları PKG başlatıcısının doğrulandığı anlamına gelmez. |
 | Diğer oyun kimlikleri / sürümler | Kabul edilmez. |
 
@@ -38,11 +38,13 @@ Hedef klasör seçimi, kontrol modu ve hata çözümü için [ayrıntılı kurul
 
 Kaynak kod ve yayınlanan araçlar: [GitHub sürümleri](https://github.com/hmyilm/fc27-turkish-commentary-installer/releases).
 
-Test edilen `FC27_TR_KUR.elf` boyutu **191.808 bayt**, SHA256 değeri:
+8 Ekim yayın derlemesi `FC27_TR_KUR.elf`: **191.808 bayt**, SHA256:
 
 ```text
-c51d10e7c2606fd2877b37871130616b7a794c9d6f2c9bf2ae5ed01c2a381f11
+68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048
 ```
+
+Bu derleme kişisel derleme yollarını içermez. Yedi nesne dosyasının çalıştırılabilir bölümleri önceki PS5 testinden geçen derlemeyle birebir aynı; yeni ikilinin konsolda yeniden testi henüz yapılmadı. [Derleme karşılaştırması](tests/build-normalization-results.txt).
 
 Türkçe veri ZIP'i bu depoda ve GitHub sürümlerinde bulunmaz.
 
@@ -53,7 +55,7 @@ Türkçe veri ZIP'i bu depoda ve GitHub sürümlerinde bulunmaz.
 - Değişecek dosyaları önce geçici dosyalara çıkarır. Asıl dosyalara geçmeden doğrulama tamamlanır.
 - İndekste yalnızca bu Türkçe dosyaların sıfır kalan boyut alanlarını günceller. Diğer kayıtları ve hash tablosunu korur.
 - Kurulum hatasında geçici yedeklerle önceki dosyaları geri getirir. Başarılı kurulumdan sonra geçici dosyaları temizler.
-- Zaten doğru olan dosyaları tekrar kopyalamaz. Kurulum sırasında `/data/FC27_TR` varsa ve yazılabiliyorsa sonucu `installer.log` dosyasına kaydeder. Kontrol modu yazma yapmaz.
+- Zaten doğru olan dosyaları tekrar kopyalamaz. `/data/FC27_TR` varsa ve yazılabiliyorsa sonucu `installer.log` dosyasına kaydeder. Kontrol modu oyun dosyalarını değiştirmez; günlük yazabilir.
 
 İşlem sırasında konsolu kapatmayın veya USB'yi çıkarmayın. Elektrik kesintisi sonrasında kalan geçici dosyalar varsa kurucu işlemi durdurur; ayrıntılar rehberdedir.
 
@@ -70,21 +72,23 @@ Proje kodu **GPL-3.0-or-later** lisanslıdır; tam metin [LICENSE](LICENSE) dosy
 [ps5-payload-dev SDK v0.43](https://github.com/ps5-payload-dev/sdk/releases/tag/v0.43) ve LLVM/Clang gerekir. Depo klasöründe, SDK dizininizi belirterek çalıştırın:
 
 ```sh
-PS5_PAYLOAD_SDK="/SDK/ps5-payload-sdk" ./build.sh
+PS5_PAYLOAD_SDK="/SDK/ps5-payload-sdk" sh ./build.sh
 ```
 
 SDK'nın LLVM kurulumunu bulamadığı ortamlarda `LLVM_CONFIG` değerini kendi `llvm-config` dosyanıza ayarlayın:
 
 ```sh
-LLVM_CONFIG="/LLVM/bin/llvm-config" PS5_PAYLOAD_SDK="/SDK/ps5-payload-sdk" ./build.sh
+LLVM_CONFIG="/LLVM/bin/llvm-config" PS5_PAYLOAD_SDK="/SDK/ps5-payload-sdk" sh ./build.sh
 ```
 
 Çıktı `build/FC27_TR_KUR.elf` olur. Test edilen derleme LLVM 23.1.2 ile yapıldı.
 
+Derleme betiği kaynak klasörünü `-ffile-prefix-map` ile göreli gösterir; geliştiricinin kişisel klasör yolu ELF içine yazılmaz.
+
 Bilgisayarda test derlemesi:
 
 ```sh
-./build.sh --host
+sh ./build.sh --host
 ./build/FC27_TR_KUR_host --check --game /oyun/klasoru --zip /paket/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
 ```
 

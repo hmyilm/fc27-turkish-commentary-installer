@@ -31,6 +31,7 @@ Path(sys.argv[3]).write_text(json.dumps({'file': source.name, 'size': len(payloa
                                      'sha256': hashlib.sha256(payload).hexdigest()}, indent=2) + '\n')
 PY
 "$PS5_PAYLOAD_SDK/bin/prospero-clang" -O2 -Wall -Wextra -Werror -std=gnu11 \
+    "-ffile-prefix-map=$task_project_dir=." \
     -ffreestanding -fno-builtin -fno-stack-protector \
     -fno-asynchronous-unwind-tables -fno-unwind-tables \
     -nodefaultlibs -I "$task_bridge_build" \
