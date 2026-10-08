@@ -7,6 +7,7 @@
 #include "assets.h"
 #include "bundle.h"
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -16,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/time.h>
@@ -35,6 +37,9 @@
 #define TITLE "PPSA34015"
 #define LOG_LIMIT (128u * 1024u)
 #define CREATED_DIR_MAX 128
+#define DISCOVERY_MAX_DEPTH 4u
+#define DISCOVERY_MAX_DIRS 4096u
+#define DISCOVERY_MAX_ENTRIES 32768u
 
 typedef struct {
     char game[TR_PATH];
@@ -732,19 +737,69 @@ static int discover_zip(char out[TR_PATH], char *err) {
     return fail(err, "Turkce ZIP yok. /data/FC27_TR veya USB/FC27_TR klasorune koyun.");
 }
 
-static int accept_candidate(const char *base, const char *folder,
-                            char found[TR_PATH], char *err) {
-    char path[TR_PATH];
-    if (path_join(path, base, folder, err))
-        return -1;
+/* Search metadata, never game content. These limits bound work on mixed-use SSDs. */
+typedef struct {
+    size_t directories;
+    size_t entries;
+    size_t max_directories;
+    size_t max_entries;
+    unsigned max_depth;
+    dev_t device;
+    char *found;
+} game_search;
+
+static int game_layout(const char *game, dev_t device, char *err) {
+    static const struct {
+        const char *name;
+        int directory;
+    } required[] = {
+        {"sce_sys", 1}, {"sce_sys/param.json", 0},
+        {"Data", 1}, {"Data/Ps5", 1}, {"ampr_emu.index", 0}
+    };
+    for (size_t i = 0; i < sizeof(required) / sizeof(required[0]); ++i) {
+        char path[TR_PATH];
+        struct stat st;
+        if (path_join(path, game, required[i].name, err))
+            return -1;
+        if (lstat(path, &st) || st.st_dev != device ||
+            (required[i].directory ? !S_ISDIR(st.st_mode) : !S_ISREG(st.st_mode)))
+            return fail(err, "Oyun klasorunde normal %s bulunamadi.", required[i].name);
+    }
+    return 0;
+}
+
+static int ignored_search_directory(const char *name) {
+    return name[0] == '.' || !strcasecmp(name, "System Volume Information") ||
+           !strcasecmp(name, "$RECYCLE.BIN");
+}
+
+/* 1 means an app metadata boundary; do not descend into any game's Data tree. */
+static int inspect_game_directory(const char *path, game_search *search, char *err) {
+    char metadata[TR_PATH], identity[TR_PATH];
     struct stat st;
-    if (lstat(path, &st)) {
+    if (path_join(metadata, path, "sce_sys", err) ||
+        path_join(identity, path, "sce_sys/param.json", err))
+        return -1;
+    if (lstat(metadata, &st)) {
         if (errno == ENOENT || errno == ENOTDIR)
             return 0;
-        return fail(err, "Oyun klasoru denetlenemedi: %s", path);
+        return fail(err, "Oyun aramasinda klasor okunamadi: %s", metadata);
     }
-    if (!S_ISDIR(st.st_mode))
-        return 0;
+    /* Do not traverse a redirected or separately mounted metadata directory. */
+    if (!S_ISDIR(st.st_mode) || st.st_dev != search->device)
+        return 1;
+    if (lstat(identity, &st)) {
+        if (errno == ENOENT || errno == ENOTDIR)
+            return 0;
+        return fail(err, "Oyun kimligi okunamadi: %s", identity);
+    }
+    if (!S_ISREG(st.st_mode) || st.st_dev != search->device)
+        return 1;
+    int version003 = 0;
+    char candidate_error[TR_ERR];
+    if (validate_param(path, &version003, candidate_error) ||
+        game_layout(path, search->device, candidate_error))
+        return 1;
     char *canonical = realpath(path, NULL);
     if (!canonical)
         return fail(err, "Oyun klasoru yolu cozumlenemedi: %s", path);
@@ -752,36 +807,135 @@ static int accept_candidate(const char *base, const char *folder,
         free(canonical);
         return fail(err, "Oyun klasoru yolu cok uzun.");
     }
-    if (found[0] && strcmp(found, canonical)) {
+    if (search->found[0] && strcmp(search->found, canonical)) {
         free(canonical);
-        return fail(err, "Birden fazla PPSA34015 klasoru var. install.conf ile game= yolunu secin.");
+        return fail(err, "Birden fazla uygun PPSA34015 klasoru var. install.conf ile game= yolunu secin.");
     }
-    strcpy(found, canonical);
+    strcpy(search->found, canonical);
     free(canonical);
-    return 0;
+    return 1;
+}
+
+static int walk_game_directories(const char *path, unsigned depth,
+                                 game_search *search, char *err) {
+    if (cancelled)
+        return fail(err, "Oyun aramasi iptal edildi.");
+    if (++search->directories > search->max_directories)
+        return fail(err, "Oyun arama sinirina ulasildi. install.conf ile game= yolunu belirtin.");
+    int candidate = inspect_game_directory(path, search, err);
+    if (candidate < 0)
+        return -1;
+    if (candidate || depth == search->max_depth)
+        return 0;
+    DIR *dir = opendir(path);
+    if (!dir)
+        return fail(err, "Oyun aramasinda klasor acilamadi: %s. install.conf ile game= belirtin.", path);
+    int result = 0;
+    for (;;) {
+        errno = 0;
+        struct dirent *entry = readdir(dir);
+        if (!entry) {
+            if (errno)
+                result = fail(err, "Oyun aramasinda klasor okunamadi: %s", path);
+            break;
+        }
+        if (++search->entries > search->max_entries) {
+            result = fail(err, "Oyun arama sinirina ulasildi. install.conf ile game= yolunu belirtin.");
+            break;
+        }
+        if (ignored_search_directory(entry->d_name))
+            continue;
+        char child[TR_PATH];
+        struct stat st;
+        if (path_join(child, path, entry->d_name, err)) {
+            result = -1;
+            break;
+        }
+        if (lstat(child, &st)) {
+            result = fail(err, "Oyun aramasinda yol okunamadi: %s", child);
+            break;
+        }
+        if (!S_ISDIR(st.st_mode) || st.st_dev != search->device)
+            continue;
+        if (walk_game_directories(child, depth + 1, search, err)) {
+            result = -1;
+            break;
+        }
+    }
+    if (closedir(dir) && !result)
+        result = fail(err, "Oyun aramasinda klasor kapatilamadi: %s", path);
+    return result;
+}
+
+static int scan_game_root(const char *root, char found[TR_PATH], char *err) {
+    struct stat st;
+    if (lstat(root, &st)) {
+        if (errno == ENOENT || errno == ENOTDIR)
+            return 0;
+        return fail(err, "Oyun arama kokune erisilemiyor: %s", root);
+    }
+    if (!S_ISDIR(st.st_mode))
+        return 0;
+    /* All production roots are absolute, normalized paths. Reject redirected
+       parents too, rather than following an etaHEN/games symlink elsewhere. */
+    char *canonical = realpath(root, NULL);
+    if (!canonical)
+        return fail(err, "Oyun arama koku cozumlenemedi: %s", root);
+    int redirected = strcmp(root, canonical) != 0;
+    free(canonical);
+    if (redirected)
+        return 0;
+    game_search search = {0, 0, DISCOVERY_MAX_DIRS, DISCOVERY_MAX_ENTRIES,
+                          DISCOVERY_MAX_DEPTH, st.st_dev, found};
+    return walk_game_directories(root, 0, &search, err);
 }
 
 static int discover_game(char out[TR_PATH], char *err) {
-    const char *roots[] = {"/data/etaHEN/games", "/data/OnionHEN/games", "/data/games"};
-    const char *names[] = {"PPSA34015-app0", "PPSA34015-app"};
+    const char *roots[] = {"/data/etaHEN/games", "/data/OnionHEN/games",
+                           "/data/games", "/data/PS5"};
     out[0] = 0;
     for (size_t r = 0; r < sizeof(roots) / sizeof(roots[0]); ++r)
-        for (size_t n = 0; n < sizeof(names) / sizeof(names[0]); ++n)
-            if (accept_candidate(roots[r], names[n], out, err))
-                return -1;
+        if (scan_game_root(roots[r], out, err))
+            return -1;
     for (int usb = 0; usb < 8; ++usb) {
-        char base[TR_PATH];
-        snprintf(base, sizeof(base), "/mnt/usb%d/etaHEN/games", usb);
-        for (size_t n = 0; n < sizeof(names) / sizeof(names[0]); ++n)
-            if (accept_candidate(base, names[n], out, err))
-                return -1;
+        char root[TR_PATH];
+        snprintf(root, sizeof(root), "/mnt/usb%d", usb);
+        if (scan_game_root(root, out, err))
+            return -1;
     }
     if (!out[0])
-        return fail(err, "Klasor oyun PPSA34015-app0/app bulunamadi. Sikistirilmis oyun desteklenmiyor.");
+        return fail(err, "Uygun PPSA34015 oyun klasoru bulunamadi. Klasor konumunu ve param.json/indeks dosyalarini kontrol edin; install.conf ile game= belirtilebilir.");
     return 0;
 }
 
+#if !defined(TR_HOST_TEST) || defined(TR_DISCOVERY_TEST)
+/* Called after realpath, so component traversal has already been normalized. */
+static int game_storage_root(const char *canonical, char root[32]) {
+    if (!strncmp(canonical, "/data", 5) &&
+        (canonical[5] == '/' || canonical[5] == 0)) {
+        strcpy(root, "/data");
+        return 1;
+    }
+    if (!strncmp(canonical, "/mnt/usb", 8) &&
+        canonical[8] >= '0' && canonical[8] <= '7' &&
+        (canonical[9] == '/' || canonical[9] == 0)) {
+        snprintf(root, 32, "/mnt/usb%c", canonical[8]);
+        return 1;
+    }
+    root[0] = 0;
+    return 0;
+}
+#endif
+
 static int canonical_game(char path[TR_PATH], char *err) {
+    char trimmed[TR_PATH];
+    strcpy(trimmed, path);
+    size_t path_length = strlen(trimmed);
+    while (path_length > 1 && trimmed[path_length - 1] == '/')
+        trimmed[--path_length] = 0;
+    struct stat original;
+    if (lstat(trimmed, &original) || !S_ISDIR(original.st_mode))
+        return fail(err, "Hedef normal bir oyun klasoru olmali: %s", path);
     char *canonical = realpath(path, NULL);
     if (!canonical)
         return fail(err, "Oyun klasoru acilamadi: %s", path);
@@ -792,13 +946,20 @@ static int canonical_game(char path[TR_PATH], char *err) {
     struct stat st;
     int ok = !lstat(canonical, &st) && S_ISDIR(st.st_mode);
 #ifndef TR_HOST_TEST
-    const char *last = strrchr(canonical, '/');
-    ok = ok && last && (!strcmp(last + 1, "PPSA34015-app0") ||
-                        !strcmp(last + 1, "PPSA34015-app"));
+    /* Image mount points are not writable source folders. Only normal /data
+       or USB storage is supported; do not redirect installs into /app0 etc. */
+    char storage[32];
+    struct stat storage_st;
+    ok = ok && game_storage_root(canonical, storage) &&
+         !stat(storage, &storage_st) && st.st_dev == storage_st.st_dev;
 #endif
     if (!ok) {
         free(canonical);
-        return fail(err, "Hedef normal PPSA34015 klasor oyunu olmali.");
+        return fail(err, "Hedef /data veya USB uzerinde normal oyun klasoru olmali; bagli oyun goruntusu kullanilamaz.");
+    }
+    if (game_layout(canonical, st.st_dev, err)) {
+        free(canonical);
+        return -1;
     }
     strcpy(path, canonical);
     free(canonical);
@@ -1213,6 +1374,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signal_cancel);
     signal(SIGTERM, signal_cancel);
     start_log();
+    note("FC27 TR v0.1.1-beta baslatiliyor.");
 #ifdef TR_HOST_TEST
     const char *fail_env = getenv("TR_FAIL_COMMIT");
     if (fail_env) {
