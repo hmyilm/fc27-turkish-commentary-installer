@@ -2,16 +2,27 @@
 
 Son güncelleme: 8 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenmeyen koşulları ayrı gösterir.
 
-## v0.1.1-beta klasör araması
+## v0.1.1-beta USB + DATA güncellemesi
 
-Bu sürüm, önceki kurucudaki sabit klasör adı ve USB’de yalnız `etaHEN/games` konumunu arama sınırını kaldırır. USB0–USB7 kökleri ile belirtilen dahili oyun kökleri en fazla dört klasör derinliğinde taranır. Klasörün adı yerine PPSA34015 v003/v004 kimliği ve gerekli oyun yapısı kontrol edilir. Birden fazla hedef veya arama sınırının aşılması durumunda otomatik seçim yapılmaz; `install.conf` istenir. Sembolik bağlantılar ve ayrı bağlanmış alt dosya sistemleri izlenmez.
+Sürüm numarası aynı kalan bu yeni ELF, ilk v0.1.1-beta dosyasından farklıdır. Dahili arama artık belirli dört oyun diziniyle sınırlı değildir; `/data` kökünden en fazla 32 klasör derinliği taranır. USB0–USB7 köklerinde dört klasör derinliği korunur. Daha önce v0.1.1-beta indirildiyse güncel `FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip` paketi yeniden indirilmelidir; ses ZIP’i değişmedi. Güncel ELF’in başlangıç bildiriminde `USB+DATA` yazar. Aynı yayında duran eski araçlar ve otomatik GitHub kaynak arşivleri bu güncellemeyi içermez; güncel kaynak özel `FC27_TR_KAYNAK_v0.1.1-beta_USB_DATA.zip` paketinde ve `main` dalındadır.
 
-- Yeni klasör aramasının bilgisayar testleri: **60 senaryo geçti**. [Sonuçlar](../tests/discovery-host-results.txt); tekrar çalıştırmak için `python3 tests/test_discovery.py`.
-- Yeni host derlemesiyle 10 dosyalık tam kurulum, yanlış kimlik/boyut reddi, yapay hata sonrası geri alma ve tekrar çalıştırmanın dosyaları değiştirmemesi doğrulandı. [v0.1.1 entegrasyon sonucu](../tests/host-v0.1.1-results.txt).
-- PS5 SDK ile native derleme tamamlandı. ELF: **192.176 bayt**, SHA256: `15c7a0bdc3ba784a0d1e700852dc22b0cd43c835faaa5df17cbe35c6fb3c1eb0`.
-- Yeni ELF’in PS5 üzerinde çalıştırılması: **henüz yapılmadı**.
-- Aşağıdaki eski konsol ve kurulum sonuçları geçmiş sürümlere aittir; v0.1.1-beta için yeni bir konsol doğrulaması olarak değerlendirilmemelidir.
+Klasörün adı yerine PPSA34015 v003/v004 kimliği ve gerekli oyun yapısı kontrol edilir. Birden fazla hedef veya arama sınırının aşılması durumunda otomatik seçim yapılmaz; `install.conf` istenir. Sembolik bağlantılar ve ayrı bağlanmış alt dosya sistemleri izlenmez.
+
+- USB + DATA güncellemesinin bilgisayar üzerinde klasör arama testleri: **81 senaryo geçti**. `/data` kökünden gerçek otomatik arama akışı da geçici test dizinleriyle doğrulandı. [Sonuçlar](../tests/discovery-host-results.txt); tekrar çalıştırmak için `python3 tests/test_discovery.py`.
+- Güncel host derlemesiyle 10 dosyalık tam kurulum, yanlış kimlik/boyut reddi, yapay hata sonrası geri alma ve tekrar çalıştırmanın dosyaları değiştirmemesi **yeniden doğrulandı**. [USB + DATA entegrasyon sonucu](../tests/host-v0.1.1-results.txt).
+- Güncel ELF: **192.176 bayt**, SHA256: `a553f01fc79bf8b9b14ef5eb7179c6c9d4fd60aa0fc6427cb6e3ba97e5bbfae7`.
+- Güncel ELF’in PS5 üzerinde çalıştırılması: **henüz yapılmadı**.
+- Aşağıdaki eski konsol ve kurulum sonuçları geçmiş derlemelere aittir; güncel ELF için yeni bir konsol doğrulaması olarak değerlendirilmemelidir.
 - Ses ZIP’i, beklenen 10 veri dosyası ve bunların hash değerleri değişmedi.
+
+### İlk v0.1.1-beta derlemesi (USB araması ve belirli dahili kökler)
+
+Bu önceki dosya USB’de klasör adı sınırını kaldırdı; dahili arama `/data/etaHEN/games`, `/data/OnionHEN/games`, `/data/games` ve `/data/PS5` ile sınırlıydı. Bu sınırlama yukarıdaki USB + DATA güncellemesinde kaldırıldı.
+
+- Önceki derlemenin 60 klasör arama senaryosu bilgisayarda geçti. Yeni `/data` genelini arama davranışı bu 60 sonucun kapsamına dahil değildir.
+- Önceki host derlemesiyle 10 dosyalık tam kurulum, yanlış kimlik/boyut reddi, yapay hata sonrası geri alma ve tekrar çalıştırmanın dosyaları değiştirmemesi doğrulandı.
+- Önceki ELF: **192.176 bayt**, SHA256: `15c7a0bdc3ba784a0d1e700852dc22b0cd43c835faaa5df17cbe35c6fb3c1eb0`.
+- Bu önceki ELF’in PS5 testi de yapılmadı.
 
 ## Oyun içi sonuç
 

@@ -2,7 +2,7 @@
 
 Bu kurucu, PPSA34015'in Türkçe spiker dosyalarını yerel ZIP'ten oyun klasörüne ekler. Kaynak ses dosyalarının sürümü v01.000.004'tür. Hedefte v01.000.003 ve v01.000.004 kabul edilir; v003'te oyun içi uyumluluk henüz doğrulanmadı.
 
-Bu rehber v0.1.1-beta içindir. Oyun klasörü araması genişletildi; 60 klasör arama testi ve kurulum/geri alma entegrasyon testi bilgisayarda geçti; yeni ELF henüz PS5 üzerinde denenmedi. Önceki ELF’in konsol testleri ile sürümler arasındaki farklar [test durumunda](TEST_DURUMU.md) belirtilir.
+Bu rehber **v0.1.1-beta USB + DATA güncellemesi** içindir. Güncel paket **`FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip`** dosyasıdır. Aynı sürüm numarasıyla daha önce yayımlanan ELF’i indirdiyseniz bu paketi yeniden indirin; önceki dosya `/data` genelini aramıyordu. Yeni güncellemenin 81 klasör arama testi ve tam kurulum/geri alma entegrasyon testi bilgisayarda geçti. PS5 testi henüz yapılmadı. Önceki ELF’in testleri ile derlemeler arasındaki farklar [test durumunda](TEST_DURUMU.md) belirtilir. Ses ZIP’i ve yerleşimi değişmedi.
 
 ## Gerekenler
 
@@ -18,6 +18,8 @@ ZIP'i önceden açmanız gerekmez. Kurucu yalnızca derlemeye kayıtlı 10 dosya
 FC27 simgesi üzerinde Options → **Oyunu Kapat** seçin. PS5 ana ekranına dönmek tek başına oyunu kapatmaz. Kurucu çalışan FC27'yi algılarsa işlemi durdurur; oyunu kendisi kapatmaz.
 
 ## 2. Dosyaları USB'ye koyun
+
+[Güncel USB + DATA kurucu paketini](https://github.com/hmyilm/fc27-turkish-commentary-installer/releases/download/v0.1.1-beta/FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip) açıp içindeki `FC27_TR_KUR.elf` dosyasını alın. Bu küçük kurucu ZIP’i açılır; **1,37 GB Türkçe ses ZIP’i açılmadan kullanılır.** Tek başına `FC27_TR_KUR_USB_DATA.elf` indirdiyseniz adını `FC27_TR_KUR.elf` yapın. Aynı yayındaki daha eski, adında `USB_DATA` bulunmayan paketi seçmeyin.
 
 USB'deki yerleşim:
 
@@ -51,11 +53,11 @@ SSD/etaHEN/games/PPSA34015-app0/
 SSD/OnionHEN/games/FC27/
 ```
 
-**PS5 iç depolaması:** `/data/etaHEN/games`, `/data/OnionHEN/games`, `/data/games` ve `/data/PS5` dizinleri ile bu köklerin altında en fazla dört klasör derinliği aranır. Tüm `/data` dizini taranmaz.
+**PS5 iç depolaması:** `/data` dizininin kendisi ve altında en fazla **32 klasör derinliği** aranır. Oyun belirli bir `etaHEN`, `OnionHEN` veya `games` dizininde olmak zorunda değildir. Örneğin `/data/FC27`, `/data/oyunlarim/FC27` ve `/data/OnionHEN/games/FC27` aynı arama kapsamındadır.
 
-Arama kökünün kendisi derinlik 0 sayılır; dördüncü klasör seviyesi de kontrol edilir. Bir oyun `sce_sys/param.json` dosyasıyla karşılaşıldığında o oyunun alt klasörleri taranmaz. Sembolik bağlantılar, ayrı bağlanmış alt dosya sistemleri, gizli klasörler, `System Volume Information` ve `$RECYCLE.BIN` atlanır. Her arama kökü için 4.096 dizin ve 32.768 dizin girdisi sınırı vardır. Bu sınır aşılırsa bulunan ilk oyuna işlem yapılmaz; hedefi `game=` ile belirtmeniz istenir.
+Arama kökünün kendisi derinlik 0 sayılır; USB’de dördüncü, `/data` altında 32. klasör seviyesi de kontrol edilir. Bir oyun `sce_sys/param.json` dosyasıyla karşılaşıldığında o oyunun alt klasörleri taranmaz. Sembolik bağlantılar, ayrı bağlanmış alt dosya sistemleri, gizli klasörler, `System Volume Information` ve `$RECYCLE.BIN` atlanır. Her arama kökü için 4.096 dizin ve 32.768 dizin girdisi sınırı vardır. Bu sınır aşılırsa bulunan ilk oyuna işlem yapılmaz; hedefi `game=` ile belirtmeniz istenir.
 
-Birden fazla uygun oyun klasörü bulunursa otomatik seçim yapılmaz. Oyun arama sınırlarından daha derindeyse, başka bir dahili konumdaysa veya birden fazla kopyası varsa aşağıdaki `game=` ayarını kullanın.
+Birden fazla uygun oyun klasörü bulunursa otomatik seçim yapılmaz. Oyun arama sınırlarından daha derindeyse, tarama sınırına ulaşılırsa veya birden fazla kopyası varsa aşağıdaki `game=` ayarını kullanın.
 
 Oyun klasörünün içeriği:
 
@@ -91,7 +93,7 @@ Kontrol modu oyun dosyalarını değiştirmez. `/data/FC27_TR` dizini varsa sonu
 
 ## 4. ELF'i başlatın
 
-Payload Manager'da listeyi yenileyin ve `FC27_TR_KUR` ELF'ini başlatın. Bildirimler doğrulama ve kurulum aşamalarını gösterir. Büyük ses dosyalarının okunması depolamaya göre zaman alabilir; işlem bitmeden oyunu açmayın.
+Payload Manager'da listeyi yenileyin ve `FC27_TR_KUR` ELF'ini başlatın. Başlangıç bildiriminde **`FC27 TR v0.1.1-beta (USB+DATA)`** görünmeli; `USB+DATA` yoksa eski ELF’i çalıştırıyorsunuz. Bildirimler doğrulama ve kurulum aşamalarını gösterir. Büyük ses dosyalarının okunması depolamaya göre zaman alabilir; işlem bitmeden oyunu açmayın.
 
 Başarı bildirimi sonrası oyunu açın. Ses/spiker ayarında **Türkçe** seçip çevrimdışı maça girin. Dosyalar tanınıyorsa ayrıca oyun içinden **İndir** seçmek gerekmez.
 
@@ -110,7 +112,7 @@ Bu dizin varsa ve yazılabiliyorsa kurulum günlüğü tutulur. Sadece USB kulla
 | Durum | Yapılacak işlem |
 | --- | --- |
 | FC27 çalışıyor | Oyunu tamamen kapatıp kurucuyu tekrar başlatın. |
-| Oyun klasörü bulunamadı | Oyunun açılmış klasör biçiminde olduğunu, `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` içeriğini kontrol edin. Gerekirse `game=` ile tam yolu seçin. v0.1.0-beta yalnız belirli klasörleri aradığı için aynı hatayı farklı konumdaki sağlam oyunlarda da veriyordu. |
+| Oyun klasörü bulunamadı | Oyunun açılmış klasör biçiminde olduğunu, `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` içeriğini kontrol edin. Gerekirse `game=` ile tam yolu seçin. v0.1.0-beta yalnız belirli klasörleri arıyordu; ilk v0.1.1-beta dosyasında da dahili arama belirli dizinlerle sınırlıydı. Güncel USB + DATA ELF’ini kullandığınızdan emin olun. |
 | ZIP bulunamadı | Dosya adını ve USB'deki `/FC27_TR` konumunu kontrol edin veya `zip=` ile tam yolu belirtin. |
 | Arama sınırına ulaşıldı | Diskteki tarama sınırı doldu; `install.conf` ile tam `game=` yolunu belirtin. Kısmi aramadan otomatik hedef seçilmez. |
 | Birden fazla oyun bulundu | `install.conf` ile kullanılacak `game=` yolunu belirtin. |
@@ -139,7 +141,7 @@ Kurucu yazılabilir oyun klasörü içindir. **SSD’nin exFAT biçimli olması 
 
 ## PKG başlatıcısı
 
-PS5 ana ekranından aynı ELF kurucusunu başlatacak PKG hazırlanıyor. Önceki ELF sürümü PS5 üzerinde test edildi; v0.1.1-beta’nın ve PKG’nin PS5 testleri henüz yapılmadı. PKG kurulumu ve PS5 üzerindeki başlatma testi tamamlanınca bu bölüm güncellenecektir. PKG kendi başına ses ZIP'ini içermez.
+PS5 ana ekranından aynı ELF kurucusunu başlatacak PKG hazırlanıyor. Önceki ELF sürümü PS5 üzerinde test edildi; v0.1.1-beta USB + DATA güncellemesinin ve PKG’nin PS5 testleri henüz yapılmadı. PKG kurulumu ve PS5 üzerindeki başlatma testi tamamlanınca bu bölüm güncellenecektir. PKG kendi başına ses ZIP'ini içermez.
 
 ## PC ile manuel alternatif
 
