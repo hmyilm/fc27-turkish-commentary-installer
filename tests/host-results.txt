@@ -1,0 +1,12 @@
+Host integration verification, 2026-10-07 (macOS arm64)
+External asset ZIP and AMPRIDX3 fixture; game assets/index are not distributed.
+PPSA34015 01.000.003 check mode: passed, no game writes.
+Wrong title: rejected without game changes.
+Incompatible nonzero Turkish index size: rejected without changes.
+Injected failure before commit rename 7: rollback restored every original asset and whole index.
+01.000.003 full install: passed, all 10 asset SHA256 hashes verified.
+Index: exactly six uint64 size fields updated; all other bytes unchanged.
+01.000.003 repeat: no rewrite; inode, mtime and hash preserved.
+01.000.004 repeat: accepted, no rewrite; inode, mtime and hash preserved.
+Total suite: success, temporary fixture removed.
+A synthetic fixture does not establish gameplay compatibility on 01.000.003.

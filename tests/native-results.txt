@@ -1,0 +1,16 @@
+Native PS5 verification, 2026-10-07
+Environment: FW 13.20, PPSA34015 01.000.004 folder game, ShadowMount+ 1.7beta3.
+ELF SHA256: c51d10e7c2606fd2877b37871130616b7a794c9d6f2c9bf2ae5ed01c2a381f11
+Check mode: all 10 existing asset SHA256 hashes and index sizes verified on-console.
+Install test: one 202,727-byte Turkish TOC and its cached size deliberately removed/zeroed with the game closed.
+Installer streamed the ZIP entry, passed CRC32 and SHA256, restored the file and one size field.
+Native file and whole-index readback matched their pre-test SHA256 hashes exactly.
+Original metadata restored after test; no installer/test temporary files or lock remain.
+First test caught unsupported futimens; final ELF uses supported futimes fallback and passed.
+PKG launcher not covered by these ELF results. Other game versions/backports not tested in gameplay.
+
+Publication annotation, 2026-10-08:
+The above test is retained for the original c51d10e7... ELF only.
+The privacy-normalized release ELF has SHA256 68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048.
+Its compiler prefix mapping changes source-path strings; see build-normalization-results.txt.
+Console retest of that new binary is pending.

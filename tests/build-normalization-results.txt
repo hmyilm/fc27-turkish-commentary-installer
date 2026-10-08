@@ -1,0 +1,25 @@
+Build privacy normalization, 2026-10-08
+Toolchain: PS5 payload SDK v0.43, LLVM 23.1.2.
+Change: build.sh and build-bridge.sh use -ffile-prefix-map from the project directory to a relative path.
+Installer, asset, ZIP and SHA256 source code unchanged.
+
+Original console-tested ELF:
+Size: 191808 bytes
+SHA256: c51d10e7c2606fd2877b37871130616b7a794c9d6f2c9bf2ae5ed01c2a381f11
+
+Privacy-normalized release ELF:
+Size: 191808 bytes
+SHA256: 68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048
+
+All executable sections in all seven compiler object files are byte-for-byte identical.
+Five complete object files are identical: installer, assets, bundle, miniz, sha256.
+Only miniz_tinfl.o and miniz_zip.o differ, in .rodata.str1.1 and .symtab.
+Each changed read-only data section exactly matches removal of the absolute project prefix from one assert source-path string.
+The changed symbol fields are only the corresponding read-only string sizes and offsets.
+Relocation sections and all other object sections are identical.
+Linking adjusts references to the changed string layout, so the final ELF hash differs.
+The normalized ELF contains no absolute developer home/project path strings.
+
+This is a build comparison, not a new runtime test.
+The 2026-10-07 console tests apply to the original SHA256 above.
+Console retest of the normalized ELF is pending; PKG runtime testing is separate.
