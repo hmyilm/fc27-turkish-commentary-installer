@@ -1,0 +1,4 @@
+/build/
+/.build/
+/pkg-tool/bin/
+/pkg-tool/obj/
