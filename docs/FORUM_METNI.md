@@ -14,7 +14,13 @@ GitHub'da kaynak kod, ELF ve kurulum rehberi var. Oyun ve Türkçe ses varlıkla
 
 **Araç ve rehber:** [GitHub](https://github.com/hmyilm/fc27-turkish-commentary-installer)
 
-**Türkçe veri ZIP'i:** MediaFire bağlantısı paylaşım öncesinde buraya eklenecek.
+**Türkçe veri ZIP'i:** [MediaFire — yaklaşık 1,37 GB](https://www.mediafire.com/file/y81auk6wpsdlbw8/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip/file).
+
+ZIP SHA256: `78d3a21b8accf760dcef0328be29e0d715df2af8080f6b4bbf0bf78e054bf3f4`
+
+**MCPSP konusu:** [FC 27 PS5 Türkçe Spiker Dosyaları ve ELF Kurucusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/). 8 Ekim 2026'da oluşturuldu; ilk paylaşımda moderatör onayı bekliyor.
+
+Ses ZIP'indeki metinler PC ile manuel kurulum alternatifini anlatır. ELF kurulumu için [güncel kurulum rehberini](KURULUM.md) izleyin; veri ZIP'ini açmayın ve adını değiştirmeyin.
 
 PS5 ana ekranı için PKG başlatıcısı da hazırlanıyor. PS5 testi ve indirme bağlantısı hazır olduğunda ayrıca eklenecek; şu an doğrulanan yöntem ELF.
 
