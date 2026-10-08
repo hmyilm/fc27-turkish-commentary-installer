@@ -2,6 +2,8 @@
 
 PPSA34015 için yerel PS5 ELF kurucusu. Hazır Türkçe spiker ZIP'ini USB'den veya PS5 depolamasından okur; 10 Türkçe veri dosyasını doğrulayarak oyun klasörüne kurar ve oyunun kendi `ampr_emu.index` dosyasındaki ilgili boyut kayıtlarını düzeltir.
 
+**v0.1.1-beta:** Oyun klasörü araması genişletildi. Harici SSD’de `etaHEN` klasörü veya belirli bir oyun klasörü adı zorunlu değil; oyun, içindeki kimlik ve veri dosyalarıyla tanınır. Klasör aramasının 60 bilgisayar testi ve kurulum/geri alma entegrasyon testi geçti; bu sürümün PS5 testi henüz yapılmadı.
+
 **GitHub paketinde oyun, spiker sesleri, unlock veya backport dosyaları bulunmaz.** Kurucu, gerekli ses dosyalarını ayrıca edinmiş kullanıcılar içindir. ZIP'i internetten indirmez, FTP'ye bağlanmaz ve kurulum için PC'de Python çalıştırmayı gerektirmez.
 
 ## Uyumluluk ve test durumu
@@ -10,11 +12,11 @@ PPSA34015 için yerel PS5 ELF kurucusu. Hazır Türkçe spiker ZIP'ini USB'den v
 | --- | --- |
 | PPSA34015 / v01.000.004 | Kaynak kurulumda çevrimdışı maç ve Türkçe spiker çalıştı. ZIP'ten yeniden kurulum sonrası maç da kullanıcı tarafından doğrulandı. |
 | PPSA34015 / v01.000.003 | Kurucu kabul eder; bu sürümde oyun içi test yapılmadı. |
-| Native ELF kurucusu | 7 Ekim derlemesi PS5 dosya/indeks testlerini geçti. 8 Ekim yayın derlemesinde yalnız derleme yolu metinleri sadeleştirildi; yeni ikili için konsol testi bekliyor. Ayrıntılar [test notlarında](docs/TEST_DURUMU.md). |
+| Native ELF kurucusu | Önceki 7 Ekim derlemesi PS5 dosya/indeks testlerini geçti. v0.1.1-beta klasör aramasını değiştirir; yeni sürümün 60 klasör arama testi ve kurulum/geri alma entegrasyon testi bilgisayarda geçti; PS5 testi henüz yapılmadı. Ayrıntılar [test notlarında](docs/TEST_DURUMU.md). |
 | PKG başlatıcısı | Hazırlanıyor; ELF test sonuçları PKG başlatıcısının doğrulandığı anlamına gelmez. |
 | Diğer oyun kimlikleri / sürümler | Kabul edilmez. |
 
-Hedef oyun yazılabilir **klasör biçiminde** olmalı ve AMPRIDX3 indeksinde gereken 10 Türkçe dosya yolu bulunmalı. Sıkıştırılmış `.ffpfsc` veya exFAT oyun görüntüsünü doğrudan düzenlemez. Farklı backport ve yükleyicilerde çalışacağına dair genel bir garanti yoktur.
+Hedef oyun yazılabilir **klasör biçiminde** olmalı ve AMPRIDX3 indeksinde gereken 10 Türkçe dosya yolu bulunmalı. **exFAT biçimli harici SSD’deki açılmış oyun klasörü desteklenir; oyun PS5’in iç depolamasında olmak zorunda değildir.** `.ffpfsc` veya exFAT oyun görüntüsünü doğrudan düzenlemez. Farklı backport ve yükleyicilerde çalışacağına dair genel bir garanti yoktur.
 
 ## USB ile hızlı kurulum
 
@@ -32,19 +34,21 @@ Hedef oyun yazılabilir **klasör biçiminde** olmalı ve AMPRIDX3 indeksinde ge
 3. USB'yi PS5'e takın. Payload Manager'da `FC27_TR_KUR` ELF'ini başlatın. Listelenmiyorsa listeyi yenileyin.
 4. Kurulum tamamlandı bildirimi gelene kadar bekleyin. Oyunu açıp spiker dilini Türkçe seçin ve çevrimdışı bir maç deneyin.
 
-Hedef klasör seçimi, kontrol modu ve hata çözümü için [ayrıntılı kurulum rehberini](docs/KURULUM.md) okuyun.
+Oyun, USB0–USB7 disklerinin kökünden en fazla dört klasör derinliğinde otomatik aranır. Örneğin SSD kökündeki `FC27`, `games/FC27` veya `OnionHEN/games/FC27` klasörleri kullanılabilir. Klasörün adından bağımsız olarak içindeki `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` kontrol edilir. Birden fazla uygun oyun varsa veya oyun daha derindeyse `install.conf` ile hedef seçin.
+
+Dahili arama konumları, hedef klasör seçimi, kontrol modu ve hata çözümü için [ayrıntılı kurulum rehberini](docs/KURULUM.md) okuyun.
 
 ## İndirme ve dosya doğrulama
 
 Kaynak kod ve yayınlanan araçlar: [GitHub sürümleri](https://github.com/hmyilm/fc27-turkish-commentary-installer/releases).
 
-8 Ekim yayın derlemesi `FC27_TR_KUR.elf`: **191.808 bayt**, SHA256:
+v0.1.1-beta `FC27_TR_KUR.elf`: **192.176 bayt**, SHA256:
 
 ```text
-68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048
+15c7a0bdc3ba784a0d1e700852dc22b0cd43c835faaa5df17cbe35c6fb3c1eb0
 ```
 
-Bu derleme kişisel derleme yollarını içermez. Yedi nesne dosyasının çalıştırılabilir bölümleri önceki PS5 testinden geçen derlemeyle birebir aynı; yeni ikilinin konsolda yeniden testi henüz yapılmadı. [Derleme karşılaştırması](tests/build-normalization-results.txt).
+v0.1.1-beta oyun klasörü aramasını değiştirir; önceki sürümle aynı ikili dosya değildir. Bu sürümün PS5 testi henüz yapılmadı. Önceki derlemelerin hash ve test kayıtları [test durumunda](docs/TEST_DURUMU.md) korunur.
 
 Türkçe veri ZIP'i bu depoda ve GitHub sürümlerinde bulunmaz. [MediaFire'dan indirin — yaklaşık 1,37 GB](https://www.mediafire.com/file/y81auk6wpsdlbw8/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip/file). ZIP'i açmadan ve adını değiştirmeden kullanın; içindeki eski metinler PC ile manuel alternatifi anlatır, ELF için [güncel rehberi](docs/KURULUM.md) izleyin.
 
@@ -54,7 +58,7 @@ Ses ZIP'i SHA256:
 78d3a21b8accf760dcef0328be29e0d715df2af8080f6b4bbf0bf78e054bf3f4
 ```
 
-[MCPSP paylaşım konusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/) 8 Ekim 2026'da oluşturuldu; ilk paylaşımda moderatör onayı bekliyor.
+[MCPSP paylaşım konusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/) 8 Ekim 2026'da yayımlandı.
 
 ## Kurucu ne yapar?
 
