@@ -11,7 +11,10 @@
 int main(int argc, char **argv) {
     char found[TR_PATH] = {0}, err[TR_ERR] = {0};
     int result = 0;
-    if (argc == 3 && !strcmp(argv[1], "storage")) {
+    if (argc == 3 && !strcmp(argv[1], "discover")) {
+        discovery_test_prefix = argv[2];
+        result = discover_game(found, err);
+    } else if (argc == 3 && !strcmp(argv[1], "storage")) {
         char storage[32];
         if (!game_storage_root(argv[2], storage)) {
             fprintf(stderr, "Unsupported game storage.\n");
@@ -29,13 +32,13 @@ int main(int argc, char **argv) {
             return 2;
         game_search search = {0, 0, (size_t)strtoul(argv[3], NULL, 10),
                               (size_t)strtoul(argv[4], NULL, 10),
-                              DISCOVERY_MAX_DEPTH, st.st_dev, found};
+                              DISCOVERY_USB_MAX_DEPTH, st.st_dev, found};
         result = walk_game_directories(argv[2], 0, &search, err);
     } else if (argc >= 3 && !strcmp(argv[1], "scan")) {
         for (int i = 2; i < argc && !result; ++i)
-            result = scan_game_root(argv[i], found, err);
+            result = scan_game_root(argv[i], DISCOVERY_USB_MAX_DEPTH, found, err);
     } else {
-        fprintf(stderr, "usage: discovery-test scan ROOT... | manual GAME | limits ROOT DIRS ENTRIES\n");
+        fprintf(stderr, "usage: discovery-test discover PREFIX | scan ROOT... | manual GAME | limits ROOT DIRS ENTRIES\n");
         return 2;
     }
     if (result) {

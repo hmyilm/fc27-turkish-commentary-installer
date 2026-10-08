@@ -22,6 +22,27 @@ PASS native image or unsupported path rejected /mnt/usb8/game
 PASS native image or unsupported path rejected /mnt/usb00/game
 PASS native image or unsupported path rejected /mnt/usb0-image
 PASS native image or unsupported path rejected /database/game
+PASS production /data search layout 0
+PASS production /data search layout 1
+PASS production /data search layout 2
+PASS production /data search layout 3
+PASS production /data search layout 4
+PASS production /data depth33 excluded
+PASS manual path beyond /data search depth allowed
+PASS production USB0 depth4 retained
+PASS production USB1 depth4 retained
+PASS production USB2 depth4 retained
+PASS production USB3 depth4 retained
+PASS production USB4 depth4 retained
+PASS production USB5 depth4 retained
+PASS production USB6 depth4 retained
+PASS production USB7 depth4 retained
+PASS production USB depth5 still excluded
+PASS production internal duplicates require choice
+PASS production data and USB duplicates require choice
+PASS production ignores other filesystem roots
+PASS production broad /data scan stops at game metadata
+PASS production /data directory budget fails safely
 PASS root
 PASS arbitrary basename
 PASS games folder
@@ -58,4 +79,4 @@ PASS directory budget fails safely
 PASS entry budget fails safely
 PASS missing root ignored
 PASS image file not a game folder
-PASS 60 discovery cases; no game files or console were used.
+PASS 81 discovery cases; no game files or console were used.

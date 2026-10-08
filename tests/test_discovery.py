@@ -73,6 +73,54 @@ def main() -> int:
             run(f"native image or unsupported path rejected {unsupported}", "storage", unsupported,
                 error="Unsupported game storage")
 
+        # Invoke actual production discover_game root selection. The C test
+        # hook only prefixes absolute roots with this temporary filesystem.
+        for number, relative in enumerate((
+            "FC27", "My own library/Football/Any folder name",
+            "etaHEN/games/a/b/c/d/FC27", "OnionHEN/games/a/b/c/d/FC27",
+            "/".join(["nested"] * 31 + ["FC27"]),
+        )):
+            root = base / f"production-data-{number}"
+            game = make_game(root / "data" / relative)
+            run(f"production /data search layout {number}", "discover", root, expected=game)
+
+        root = base / "production-data-depth-bound"
+        game = make_game(root / "data" / Path(*(["nested"] * 32 + ["FC27"])))
+        run("production /data depth33 excluded", "discover", root, error="bulunamadi")
+        run("manual path beyond /data search depth allowed", "manual", game, expected=game)
+
+        for usb in range(8):
+            root = base / f"production-usb-{usb}"
+            game = make_game(root / f"mnt/usb{usb}" / "one/two/three/FC27")
+            run(f"production USB{usb} depth4 retained", "discover", root, expected=game)
+        root = base / "production-usb-depth-bound"
+        make_game(root / "mnt/usb0/one/two/three/four/FC27")
+        run("production USB depth5 still excluded", "discover", root, error="bulunamadi")
+
+        root = base / "production-data-duplicates"
+        make_game(root / "data/FC27")
+        make_game(root / "data/Other/Archive/FC27")
+        run("production internal duplicates require choice", "discover", root, error="Birden fazla")
+        root = base / "production-cross-storage-duplicates"
+        make_game(root / "data/My FC27")
+        make_game(root / "mnt/usb7/FC27")
+        run("production data and USB duplicates require choice", "discover", root, error="Birden fazla")
+
+        root = base / "production-outside-data"
+        make_game(root / "Other/FC27")
+        run("production ignores other filesystem roots", "discover", root, error="bulunamadi")
+        root = base / "production-data-game-boundary"
+        game = make_game(root / "data/FC27")
+        make_game(game / "Data/Ps5/also-looks-like-a-game")
+        run("production broad /data scan stops at game metadata", "discover", root, expected=game)
+
+        root = base / "production-data-budget"
+        data = root / "data"
+        data.mkdir(parents=True)
+        for number in range(4096):
+            (data / f"folder-{number}").mkdir()
+        run("production /data directory budget fails safely", "discover", root, error="arama sinirina")
+
         # Common layouts, wrapper folders and arbitrary casing/names all use
         # the same production traversal; no name allowlist is required.
         layouts = [
