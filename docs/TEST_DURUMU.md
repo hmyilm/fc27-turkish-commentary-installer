@@ -2,6 +2,17 @@
 
 Son güncelleme: 8 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenmeyen koşulları ayrı gösterir.
 
+## v0.1.1-beta klasör araması
+
+Bu sürüm, önceki kurucudaki sabit klasör adı ve USB’de yalnız `etaHEN/games` konumunu arama sınırını kaldırır. USB0–USB7 kökleri ile belirtilen dahili oyun kökleri en fazla dört klasör derinliğinde taranır. Klasörün adı yerine PPSA34015 v003/v004 kimliği ve gerekli oyun yapısı kontrol edilir. Birden fazla hedef veya arama sınırının aşılması durumunda otomatik seçim yapılmaz; `install.conf` istenir. Sembolik bağlantılar ve ayrı bağlanmış alt dosya sistemleri izlenmez.
+
+- Yeni klasör aramasının bilgisayar testleri: **60 senaryo geçti**. [Sonuçlar](../tests/discovery-host-results.txt); tekrar çalıştırmak için `python3 tests/test_discovery.py`.
+- Yeni host derlemesiyle 10 dosyalık tam kurulum, yanlış kimlik/boyut reddi, yapay hata sonrası geri alma ve tekrar çalıştırmanın dosyaları değiştirmemesi doğrulandı. [v0.1.1 entegrasyon sonucu](../tests/host-v0.1.1-results.txt).
+- PS5 SDK ile native derleme tamamlandı. ELF: **192.176 bayt**, SHA256: `15c7a0bdc3ba784a0d1e700852dc22b0cd43c835faaa5df17cbe35c6fb3c1eb0`.
+- Yeni ELF’in PS5 üzerinde çalıştırılması: **henüz yapılmadı**.
+- Aşağıdaki eski konsol ve kurulum sonuçları geçmiş sürümlere aittir; v0.1.1-beta için yeni bir konsol doğrulaması olarak değerlendirilmemelidir.
+- Ses ZIP’i, beklenen 10 veri dosyası ve bunların hash değerleri değişmedi.
+
 ## Oyun içi sonuç
 
 | Deneme | Sonuç |
@@ -40,7 +51,7 @@ FW 13.20, PPSA34015 v01.000.004 ve ShadowMount+ 1.7beta3 ortamında:
 
 Bu PS5 testi mevcut çalışan kuruluma bir dosyanın yeniden kurulmasını doğrular. Başka oyun paketlerinde veya v003'te oyun içi uyumluluğu kanıtlamaz. Sonuç: [native test kaydı](../tests/native-results.txt).
 
-### 8 Ekim yayın derlemesi
+### 8 Ekim v0.1.0-beta yayın derlemesi
 
 Yayın dosyasında geliştiricinin yerel klasör yolu kalmaması için derleme betiğine `-ffile-prefix-map` eklendi. Kurucu kaynak kodu değişmedi. Yeni ELF **191.808 bayt**, SHA256:
 

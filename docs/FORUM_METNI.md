@@ -1,4 +1,4 @@
-# FC27 PS5 Türkçe Spiker — Yerel ELF Kurucusu ve Rehber | PPSA34015 v003/v004
+# FC27 PS5 Türkçe Spiker — ELF Kurucusu v0.1.1-beta ve Rehber | PPSA34015 v003/v004
 
 Arkadaşlar, PPSA34015 için Türkçe spiker dosyalarını kuran bir PS5 ELF aracı hazırladık. ZIP USB'de veya konsol depolamasında duruyor; kurucu PS5 üzerinde açıyor, bilinen 10 dosyayı CRC32 ve SHA256 ile kontrol ediyor ve mevcut `ampr_emu.index` içindeki ilgili boyut kayıtlarını düzeltiyor. Kurulum sırasında PC'de Python çalıştırmaya veya FTP bağlantısına gerek yok.
 
@@ -6,7 +6,7 @@ Kaynak v01.000.004 kurulumunda çevrimdışı maç ve Türkçe spiker çalışt�
 
 Native ELF de PS5 üzerinde denendi: 10 dosyanın tam hash kontrolü geçti; kontrollü olarak eksiltilen bir Türkçe dosya ve indeks kaydı ZIP'ten geri kuruldu. Sonuç konsoldan tekrar okunarak doğrulandı. Bilgisayar testinde 10 dosyalık kurulum ve hata sırasında geri alma da kontrol edildi.
 
-Bu konsol testleri 7 Ekim derlemesine ait. 8 Ekim yayın dosyasında kişisel derleme yolu metinleri kaldırıldı; derlenen çalıştırılabilir kod bölümleri aynı, ancak yeni ikili için tekrar konsol testi henüz yapılmadı.
+Bu konsol testleri 7 Ekim derlemesine ait. v0.1.1-beta oyun klasörünü bulma yöntemini değiştirir; yeni sürümün 60 klasör arama testi ve kurulum/geri alma entegrasyon testi bilgisayarda geçti; PS5 testi henüz yapılmadı. Önceki konsol sonuçları yeni sürümün test edildiği anlamına gelmez.
 
 Araç v01.000.003 ve v01.000.004'ü kabul ediyor. Dosyaların kaynağı v004; v003 ve farklı backportlar üzerinde oyun içi test henüz yok. Ayrıntılar GitHub'daki **Test ve uyumluluk durumu** sayfasında.
 
@@ -18,11 +18,11 @@ GitHub'da kaynak kod, ELF ve kurulum rehberi var. Oyun ve Türkçe ses varlıkla
 
 ZIP SHA256: `78d3a21b8accf760dcef0328be29e0d715df2af8080f6b4bbf0bf78e054bf3f4`
 
-**MCPSP konusu:** [FC 27 PS5 Türkçe Spiker Dosyaları ve ELF Kurucusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/). 8 Ekim 2026'da oluşturuldu; ilk paylaşımda moderatör onayı bekliyor.
+**MCPSP konusu:** [FC 27 PS5 Türkçe Spiker Dosyaları ve ELF Kurucusu](https://www.mcpsp.com/threads/fc-27-ps5-turkce-spiker-dosyalari-ve-elf-kurucusu-ppsa34015-v004.95660/). 8 Ekim 2026'da yayımlandı.
 
 Ses ZIP'indeki metinler PC ile manuel kurulum alternatifini anlatır. ELF kurulumu için [güncel kurulum rehberini](KURULUM.md) izleyin; veri ZIP'ini açmayın ve adını değiştirmeyin.
 
-PS5 ana ekranı için PKG başlatıcısı da hazırlanıyor. PS5 testi ve indirme bağlantısı hazır olduğunda ayrıca eklenecek; şu an doğrulanan yöntem ELF.
+PS5 ana ekranı için PKG başlatıcısı da hazırlanıyor. PS5 testi ve indirme bağlantısı hazır olduğunda ayrıca eklenecek; önceki ELF sürümünün test sonuçları yukarıdadır.
 
 USB yerleşimi:
 
@@ -31,6 +31,18 @@ USB yerleşimi:
 /FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
 ```
 
-Oyunu tamamen kapatıp Payload Manager'dan ELF'i başlatın. İşlem tamamlandıktan sonra oyunda spiker dilini Türkçe seçip çevrimdışı maç deneyin. Hedef oyun yazılabilir klasör biçiminde olmalı; sıkıştırılmış oyun görüntüsüne doğrudan ekleme yapılmıyor. Ayrıntılı rehber ve PC ile manuel alternatif GitHub'da.
+Oyunu tamamen kapatıp Payload Manager'dan ELF'i başlatın. İşlem tamamlandıktan sonra oyunda spiker dilini Türkçe seçip çevrimdışı maç deneyin.
+
+## v0.1.1-beta: Oyun klasörü araması
+
+Harici SSD’de **`etaHEN` klasörü veya `PPSA34015-app0` adı zorunlu değil.** USB0–USB7 disklerinin kökü ve kökten en fazla dört klasör derinliği otomatik aranır. Örneğin `SSD/FC27`, `SSD/games/FC27`, `SSD/PS5/FC27` veya `SSD/OnionHEN/games/FC27` kullanılabilir. Dahili arama kökleri `/data/etaHEN/games`, `/data/OnionHEN/games`, `/data/games` ve `/data/PS5` dizinleridir.
+
+Kurucu klasör içindeki `sce_sys/param.json` ile PPSA34015 v003/v004 kimliğini, `ampr_emu.index` dosyasını ve `Data/Ps5` dizinini kontrol eder. Birden fazla uygun kopya varsa otomatik seçim yapmaz; `install.conf` içindeki `game=` ayarıyla hedefi seçmek gerekir. Arama dışındaki başka bir konum için de oyunu taşımadan bu ayar kullanılabilir; ayrıntıları [kurulum rehberinde](KURULUM.md).
+
+**exFAT biçimli harici SSD’deki açılmış oyun klasörü desteklenir.** Oyun PS5’in iç depolamasına kurulmuş olmak zorunda değildir. Oyunun tek `.exfat` / `.ffpfsc` görüntü dosyası olması farklıdır; görüntünün içine doğrudan ekleme yapılmaz.
+
+Eski “Klasor oyun ... bulunamadi. Sikistirilmis oyun desteklenmiyor.” mesajı oyunun sıkıştırılmış olduğunu tespit etmiyordu. Eski kurucunun dar arama konumları dışında kalan klasörlerde de aynı mesaj çıkıyordu. ZIP yerleşimi ve ses dosyaları değişmedi; eski ses ZIP’i kullanılabilir.
+
+Ayrıntılı rehber ve PC ile manuel alternatif GitHub’da.
 
 Deneyenler oyun sürümünü, yükleyici/firmware bilgisini ve Türkçe maç sonucunu yazarsa uyumluluk listesini genişletebiliriz. Tam maç ve yeniden açılış sonuçlarını da eklerseniz yararlı olur.

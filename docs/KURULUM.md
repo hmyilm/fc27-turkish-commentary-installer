@@ -2,12 +2,12 @@
 
 Bu kurucu, PPSA34015'in Türkçe spiker dosyalarını yerel ZIP'ten oyun klasörüne ekler. Kaynak ses dosyalarının sürümü v01.000.004'tür. Hedefte v01.000.003 ve v01.000.004 kabul edilir; v003'te oyun içi uyumluluk henüz doğrulanmadı.
 
-8 Ekim yayın ELF'inde yalnız derleme yolu metinleri sadeleştirildi. Önceki ELF konsol testlerini geçti; yeni ikili için tekrar konsol testi bekliyor. İki derlemenin SHA256 değerleri ve karşılaştırma sonucu [test durumunda](TEST_DURUMU.md).
+Bu rehber v0.1.1-beta içindir. Oyun klasörü araması genişletildi; 60 klasör arama testi ve kurulum/geri alma entegrasyon testi bilgisayarda geçti; yeni ELF henüz PS5 üzerinde denenmedi. Önceki ELF’in konsol testleri ile sürümler arasındaki farklar [test durumunda](TEST_DURUMU.md) belirtilir.
 
 ## Gerekenler
 
 - ELF başlatabilen PS5 ortamı ve Payload Manager.
-- Yazılabilir klasör biçiminde PPSA34015 oyunu; klasöründe `sce_sys/param.json` ve `ampr_emu.index` bulunmalı.
+- Yazılabilir klasör biçiminde PPSA34015 oyunu; klasöründe `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` bulunmalı. exFAT biçimli harici SSD kullanılabilir; oyun PS5’in iç depolamasında olmak zorunda değildir.
 - `FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip` adlı uyumlu Türkçe veri paketi. Ses dosyaları bu GitHub deposunda yer almaz.
 - Hedef oyun depolamasında geçici çıkarma için yeterli boş alan. 10 dosyanın açılmış toplamı **1.503.216.738 bayt**; hedefte yaklaşık **2 GB boş alan** ayırmak uygundur. ZIP aynı depolamada tutulacaksa ZIP için de ayrı alan gerekir.
 
@@ -39,33 +39,47 @@ Yerel kurulum sırasında FTP bağlantısı veya internetten indirme yapılmaz. 
 
 ## 3. Hedef oyun klasörünü belirleyin
 
-Kurucu bilinen oyun dizinlerinde `PPSA34015-app0` ve `PPSA34015-app` klasörlerini arar. Birden fazla uygun kurulum bulursa rastgele seçim yapmaz; açık bir hedef ister.
+v0.1.1-beta oyun klasörünü adına göre değil, içeriğine göre tanır. `sce_sys/param.json` içinde oyun kimliği **PPSA34015**, sürüm **01.000.003** veya **01.000.004** olmalı; aynı klasörde `ampr_emu.index` ve `Data/Ps5` bulunmalı. Kurulumdan önce indeksin gerekli Türkçe kayıtları da doğrulanır.
 
-Otomatik oyun arama konumları `/data/etaHEN/games`, `/data/OnionHEN/games`, `/data/games` ve USB0–USB7 üzerindeki `/etaHEN/games` dizinleridir. ZIP için önce `/data/FC27_TR`, sonra `/data`, ardından USB0–USB7 üzerindeki `/FC27_TR` ve USB kökü kontrol edilir; ilk bulunan uygun konum kullanılır. Belirli bir ZIP'i seçmek için `zip=` kullanın.
-
-Örneğin:
+**Harici USB/SSD:** `/mnt/usb0`–`/mnt/usb7` disklerinin kökü ve kökten en fazla dört klasör derinliğindeki dizinler aranır. `etaHEN` veya `PPSA34015-app0` adı zorunlu değildir. Şu yerleşimler örnektir; oyunu bunlardan birine taşımak gerekmez:
 
 ```text
-/data/etaHEN/games/PPSA34015-app0
+SSD/FC27/
+SSD/games/FC27/
+SSD/PS5/FC27/
+SSD/etaHEN/games/PPSA34015-app0/
+SSD/OnionHEN/games/FC27/
 ```
 
-Klasör içinde şu dosyalar bulunmalı:
+**PS5 iç depolaması:** `/data/etaHEN/games`, `/data/OnionHEN/games`, `/data/games` ve `/data/PS5` dizinleri ile bu köklerin altında en fazla dört klasör derinliği aranır. Tüm `/data` dizini taranmaz.
+
+Arama kökünün kendisi derinlik 0 sayılır; dördüncü klasör seviyesi de kontrol edilir. Bir oyun `sce_sys/param.json` dosyasıyla karşılaşıldığında o oyunun alt klasörleri taranmaz. Sembolik bağlantılar, ayrı bağlanmış alt dosya sistemleri, gizli klasörler, `System Volume Information` ve `$RECYCLE.BIN` atlanır. Her arama kökü için 4.096 dizin ve 32.768 dizin girdisi sınırı vardır. Bu sınır aşılırsa bulunan ilk oyuna işlem yapılmaz; hedefi `game=` ile belirtmeniz istenir.
+
+Birden fazla uygun oyun klasörü bulunursa otomatik seçim yapılmaz. Oyun arama sınırlarından daha derindeyse, başka bir dahili konumdaysa veya birden fazla kopyası varsa aşağıdaki `game=` ayarını kullanın.
+
+Oyun klasörünün içeriği:
 
 ```text
-PPSA34015-app0/
+FC27/
 ├── ampr_emu.index
 ├── sce_sys/param.json
 └── Data/Ps5/...
 ```
 
-Klasörünüz farklı konumdaysa `/data/FC27_TR/install.conf` adlı düz metin dosyası kullanın:
+### Oyunu taşımadan hedef seçmek
+
+`/data/FC27_TR/install.conf` adlı düz metin dosyasına tam yolu yazın. Bu ayar dosyası PS5’in `/data/FC27_TR` dizininde olmalı; USB’ye konan `install.conf` okunmaz.
 
 ```ini
-game=/data/etaHEN/games/PPSA34015-app0
+game=/mnt/usb0/oyunlarim/FC27
 zip=/mnt/usb0/FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
 ```
 
-`game` oyun klasörünün kendisi, `zip` ZIP dosyasının tam yoludur. Örnekteki USB bağlantı noktasını kendi konumunuza göre değiştirin. Bu dosya yoksa otomatik arama ve kurulum modu kullanılır. `mode=install` satırı da açıkça kurulum modunu seçer.
+`game` oyun klasörünün kendisi, `zip` ZIP dosyasının tam yoludur. Örnekteki klasör ve USB bağlantı noktasını kendi konumunuza göre değiştirin. `game=` ile seçilen klasörün adı ve derinliği serbesttir; aynı kimlik, sürüm ve içerik kontrolleri uygulanır. Hedef normal, yazılabilir bir kaynak oyun klasörü olarak `/data` veya `/mnt/usb0`–`/mnt/usb7` altında bulunmalı; ayrı bağlanmış oyun görüntüsü veya sembolik bağlantı olmamalıdır. İhtiyacınız olmayan `zip=` satırını kaldırabilirsiniz.
+
+ZIP arama konumları değişmedi: önce `/data/FC27_TR`, sonra `/data`, ardından USB0–USB7 üzerindeki `/FC27_TR` ve USB kökü kontrol edilir; ilk bulunan uygun konum kullanılır. Belirli bir ZIP’i seçmek için `zip=` kullanın.
+
+Ayar dosyası yoksa otomatik arama ve kurulum modu kullanılır. `mode=install` satırı da açıkça kurulum modunu seçer.
 
 Sadece ön kontrol için aynı dosyaya şu satırı ekleyin:
 
@@ -96,7 +110,9 @@ Bu dizin varsa ve yazılabiliyorsa kurulum günlüğü tutulur. Sadece USB kulla
 | Durum | Yapılacak işlem |
 | --- | --- |
 | FC27 çalışıyor | Oyunu tamamen kapatıp kurucuyu tekrar başlatın. |
+| Oyun klasörü bulunamadı | Oyunun açılmış klasör biçiminde olduğunu, `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` içeriğini kontrol edin. Gerekirse `game=` ile tam yolu seçin. v0.1.0-beta yalnız belirli klasörleri aradığı için aynı hatayı farklı konumdaki sağlam oyunlarda da veriyordu. |
 | ZIP bulunamadı | Dosya adını ve USB'deki `/FC27_TR` konumunu kontrol edin veya `zip=` ile tam yolu belirtin. |
+| Arama sınırına ulaşıldı | Diskteki tarama sınırı doldu; `install.conf` ile tam `game=` yolunu belirtin. Kısmi aramadan otomatik hedef seçilmez. |
 | Birden fazla oyun bulundu | `install.conf` ile kullanılacak `game=` yolunu belirtin. |
 | Kimlik/sürüm uyuşmuyor | Hedef `param.json` dosyasında PPSA34015 ve 01.000.003/01.000.004 bulunmalı. Başka oyun için kullanmayın. |
 | Gerekli indeks yolu yok veya boyutu farklı | Bu indeks mevcut veri paketiyle uyumlu değil. Başka kurulumun tüm indeksini kopyalamayın; günlükle birlikte durumu bildirin. |
@@ -104,6 +120,8 @@ Bu dizin varsa ve yazılabiliyorsa kurulum günlüğü tutulur. Sadece USB kulla
 | Boş alan yetersiz | Hedef oyun depolamasında yer açın. |
 | `.tr-stage` / `.tr-previous` dosyaları kaldı | Önce günlüğü inceleyin. Özellikle `.tr-previous` dosyasını silmeyin; önceki dosyanın kurtarma kopyası olabilir. Hangi dosyanın asıl hâl olduğundan emin olmadan tekrar kurmayın. |
 | Kurulum başarılı, oyun hâlâ İndir istiyor | Dosya kontrolü oyun içi tanımayı tek başına kanıtlamaz. Kullanılan oyun paketi, backport ve yükleyici bilgisini bildirin. |
+
+Eski sürümdeki “Klasor oyun PPSA34015-app0/app bulunamadi. Sikistirilmis oyun desteklenmiyor.” mesajı genel bir açıklamaydı; oyunun sıkıştırılmış olduğunu tespit ettiği anlamına gelmez. ELF ve ZIP’i başka diske taşımak hedef oyunun bulunmasını tek başına sağlamaz.
 
 ## Dosyalarda yapılan değişiklik
 
@@ -117,11 +135,11 @@ Bu işlem başlangıç dosyasını, backportu, unlock paketini, oyun kütüphane
 
 ## Sıkıştırılmış oyun görüntüsü
 
-Kurucu yazılabilir oyun klasörü içindir. `.ffpfsc` veya exFAT oyun görüntüsüne doğrudan ekleme yapmaz. Önce klasör içeriğini güncelleyip Türkçe spikerin çalıştığını doğrulayın; ardından kendi paketleme aracınızla görüntüyü yeniden oluşturabilirsiniz.
+Kurucu yazılabilir oyun klasörü içindir. **SSD’nin exFAT biçimli olması desteklenir.** Oyunun tek dosya olan `.ffpfsc` veya exFAT oyun görüntüsü biçiminde olması farklıdır; kurucu bu görüntülerin içine doğrudan ekleme yapmaz. Önce açılmış oyun klasörünü güncelleyip Türkçe spikerin çalıştığını doğrulayın; ardından kendi paketleme aracınızla görüntüyü yeniden oluşturabilirsiniz. Kurulum sonrası yeniden paketlenmiş oyun ayrıca doğrulanmadı.
 
 ## PKG başlatıcısı
 
-PS5 ana ekranından aynı ELF kurucusunu başlatacak PKG hazırlanıyor. Bu rehberdeki doğrulanmış kurulum yöntemi ELF'tir; PKG kurulumu ve PS5 üzerindeki başlatma testi tamamlanınca bu bölüm güncellenecektir. PKG kendi başına ses ZIP'ini içermez.
+PS5 ana ekranından aynı ELF kurucusunu başlatacak PKG hazırlanıyor. Önceki ELF sürümü PS5 üzerinde test edildi; v0.1.1-beta’nın ve PKG’nin PS5 testleri henüz yapılmadı. PKG kurulumu ve PS5 üzerindeki başlatma testi tamamlanınca bu bölüm güncellenecektir. PKG kendi başına ses ZIP'ini içermez.
 
 ## PC ile manuel alternatif
 
