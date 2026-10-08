@@ -2,6 +2,34 @@
 
 Son güncelleme: 8 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenmeyen koşulları ayrı gösterir.
 
+## v0.2.0-beta — görüntü katmanı
+
+ELF: **227.256 bayt**, SHA256 `63cff8e096e70ae903f888616d603fc872d5cbb18854119c30bfdb3f92de4208`. Bu sürüm ayrı bir beta yayınıdır; aşağıdaki v0.1.1 geçmişini değiştirmez.
+
+8 Ekim 2026, FW 13.20, ShadowMount+ 1.7beta3, PPSA34015 v01.000.004:
+
+- Kayıtlı kaynak 92.201.680.896 bayt `.ffpfsc`; içinde exFAT oyun görüntüsü bulunuyor. İç görüntüde 67.108.864 bayt boş alan vardı.
+- Kontrol modu yeni hedef klasörü oluşturmadı; oyun/görüntü dosyalarına yazmadı.
+- İlk denemelerde ShadowMount’un 10 saniyelik klasör kararlılık beklemesi ve unionfs’nin üst diskin yazılabilir bayraklarını bildirmesi saptandı. Kod bu gerçek davranışlara göre düzeltildi. Temel görüntünün salt okunur olması zorunlu kaldı.
+- ELF 10 Türkçe dosyayı ve oyunun kendi indeksini `/data/homebrew/backports/PPSA34015` altına kurdu. ZIP CRC/SHA256, hedef dosyaların tam geri okuması ve oyunun göreceği yollardan tam doğrulama geçti.
+- Ayrı bir yeniden bağlama denemesinde yalnız üst katmana konulan geçici işaret dosyası oyun görünümünden okundu; sonra silindi. Böylece görüntü içindeki mevcut dosyalara düşülerek yanlış doğrulama yapılmadığı ayrıca kontrol edildi.
+- Kullanıcı yeni kurulumdan sonra **Türkçe spikerle çevrimdışı maça girdiğini doğruladı**.
+- Sonraki kurulum denemesi oyun açık olduğu için değişiklik yapılmadan engellendi. Konsolda tekrar kurulum/no-op testi tamamlanmadı; bu davranış bilgisayarda doğrulandı.
+- Görüntü dosyasına yazan işlem yoktur; kaynak kimliği/boyutu/zamanı işlem boyunca kontrol edildi. 92 GB görüntünün tamamı için yeniden SHA256 hesaplanmadı.
+
+**Sınırlar:** Kaynak görüntü zaten çalışan Türkçe dosyalarını içeriyordu; ayrı katmanın kurulması ve okunması doğrulandı. Bu sonuç Türkçesiz başka bir dağıtımın, Pippo paketinin, v003’ün, FW 13.60’ın veya tek başına exFAT görüntüsünün oyun içi doğrulandığı anlamına gelmez. Tam maç, konsol yeniden başlatma ve uzun süreli test henüz yok.
+
+Bilgisayar testleri:
+
+- 81 klasör arama senaryosu.
+- 55 sentetik kurulum/geri alma senaryosu: kaynak değişmeden kurulum, başka backport dosyalarının korunması, eksik hedefte yazmayan kontrol modu, uyumsuz indeks/AMPR paketi reddi, mevcut hedefte 22 ve yeni hedefte 11 yeniden adlandırma hata noktası, iptal ve son dosya doğrulaması.
+- ShadowMount modülü: 442 doğrulama, ASan + UBSan; API/JSON/HTTP, kaynak ve bağlama kimliği, seçilen hedef, kararlılık beklemesi ve temizleme.
+- Gerçek 1,37 GB ZIP ile 10 dosyanın kurulumu, altı indeks boyutunun düzeltilmesi, hata sonrası geri alma, v003/v004 kimlik kabulü ve tekrar kurulumda değişiklik olmaması.
+
+Çalıştırma: `python3 tests/test_discovery.py`, `python3 tests/test_overlay.py`, `python3 tests/test_shadowmount.py`. Gerçek veri testi özel ZIP ve indeks gerektirir; varlıklar depoya eklenmez.
+
+Aşağıdaki bölümler **önceki sürümlerin tarihî kayıtlarıdır**.
+
 ## v0.1.1-beta USB + DATA güncellemesi
 
 Sürüm numarası aynı kalan bu yeni ELF, ilk v0.1.1-beta dosyasından farklıdır. Dahili arama artık belirli dört oyun diziniyle sınırlı değildir; `/data` kökünden en fazla 32 klasör derinliği taranır. USB0–USB7 köklerinde dört klasör derinliği korunur. Daha önce v0.1.1-beta indirildiyse güncel `FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip` paketi yeniden indirilmelidir; ses ZIP’i değişmedi. Güncel ELF’in başlangıç bildiriminde `USB+DATA` yazar. Aynı yayında duran eski araçlar ve otomatik GitHub kaynak arşivleri bu güncellemeyi içermez; güncel kaynak özel `FC27_TR_KAYNAK_v0.1.1-beta_USB_DATA.zip` paketinde ve `main` dalındadır.

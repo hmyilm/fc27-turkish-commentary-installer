@@ -1,147 +1,126 @@
-# Kurulum rehberi
+# Kurulum rehberi — v0.2.0-beta
 
-Bu kurucu, PPSA34015'in Türkçe spiker dosyalarını yerel ZIP'ten oyun klasörüne ekler. Kaynak ses dosyalarının sürümü v01.000.004'tür. Hedefte v01.000.003 ve v01.000.004 kabul edilir; v003'te oyun içi uyumluluk henüz doğrulanmadı.
-
-Bu rehber **v0.1.1-beta USB + DATA güncellemesi** içindir. Güncel paket **`FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip`** dosyasıdır. Aynı sürüm numarasıyla daha önce yayımlanan ELF’i indirdiyseniz bu paketi yeniden indirin; önceki dosya `/data` genelini aramıyordu. Yeni güncellemenin 81 klasör arama testi ve tam kurulum/geri alma entegrasyon testi bilgisayarda geçti. PS5 testi henüz yapılmadı. Önceki ELF’in testleri ile derlemeler arasındaki farklar [test durumunda](TEST_DURUMU.md) belirtilir. Ses ZIP’i ve yerleşimi değişmedi.
+PPSA34015, v01.000.003 / v01.000.004 kabul edilir. Ses kaynağı v004’tür; v003’te oyun içi test yapılmadı. [Doğrulanan koşullar](TEST_DURUMU.md).
 
 ## Gerekenler
 
-- ELF başlatabilen PS5 ortamı ve Payload Manager.
-- Yazılabilir klasör biçiminde PPSA34015 oyunu; klasöründe `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` bulunmalı. exFAT biçimli harici SSD kullanılabilir; oyun PS5’in iç depolamasında olmak zorunda değildir.
-- `FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip` adlı uyumlu Türkçe veri paketi. Ses dosyaları bu GitHub deposunda yer almaz.
-- Hedef oyun depolamasında geçici çıkarma için yeterli boş alan. 10 dosyanın açılmış toplamı **1.503.216.738 bayt**; hedefte yaklaşık **2 GB boş alan** ayırmak uygundur. ZIP aynı depolamada tutulacaksa ZIP için de ayrı alan gerekir.
+- PS5’te ELF çalıştırabilen ortam ve Payload Manager.
+- Açılmış, yazılabilir oyun klasörü **veya** ShadowMount+ tarafından kayıtlı oyun görüntüsü.
+- Görüntü modu için ShadowMount+ 1.7beta3’ün kullandığı yerel API açık olmalı: varsayılan `127.0.0.1:10101`. İnternete veya yerel ağa açılması gerekmez.
+- `FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip`: yaklaşık 1,37 GB. ZIP açılmadan kullanılır.
+- Kurulum hedefinde yaklaşık 2 GB boş alan. ZIP aynı depolamada tutulacaksa ayrıca alan gerekir. Açılmış 10 ses dosyası toplam 1.503.216.738 bayttır.
 
-ZIP'i önceden açmanız gerekmez. Kurucu yalnızca derlemeye kayıtlı 10 dosyayı çıkarır; ZIP'teki metin veya yardımcı dosyaları oyun klasörüne kopyalamaz.
+## Kısa kurulum
 
-## 1. Oyunu kapatın
+1. FC27 üzerinde Options → **Oyunu Kapat**. Ana ekrana dönmek tek başına yeterli değildir.
+2. Küçük **kurucu ZIP’ini** açın. İçinden çıkan ELF’i ve açılmamış **ses ZIP’ini** USB’ye yerleştirin:
 
-FC27 simgesi üzerinde Options → **Oyunu Kapat** seçin. PS5 ana ekranına dönmek tek başına oyunu kapatmaz. Kurucu çalışan FC27'yi algılarsa işlemi durdurur; oyunu kendisi kapatmaz.
+   ```text
+   /pldmgr/FC27_TR_KUR.elf
+   /FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
+   ```
 
-## 2. Dosyaları USB'ye koyun
+3. Görüntü kullanıyorsanız ShadowMount çalışsın ve FC27 kütüphanede görünsün. Başka araçla aynı anda bağlama, açma veya sıkıştırma yapmayın.
+4. Payload Manager’dan ELF’i başlatın. **`v0.2.0-beta (KLASOR+GORUNTU)`** bildirimi gelmeli.
+5. Tamamlandı bildirimi sonrası oyunda Türkçe spikeri seçip çevrimdışı maç deneyin. Dosyalar tanındığında oyun içinden ayrıca indirmek gerekmez.
 
-[Güncel USB + DATA kurucu paketini](https://github.com/hmyilm/fc27-turkish-commentary-installer/releases/download/v0.1.1-beta/FC27_TR_KURUCU_v0.1.1-beta_USB_DATA.zip) açıp içindeki `FC27_TR_KUR.elf` dosyasını alın. Bu küçük kurucu ZIP’i açılır; **1,37 GB Türkçe ses ZIP’i açılmadan kullanılır.** Tek başına `FC27_TR_KUR_USB_DATA.elf` indirdiyseniz adını `FC27_TR_KUR.elf` yapın. Aynı yayındaki daha eski, adında `USB_DATA` bulunmayan paketi seçmeyin.
-
-USB'deki yerleşim:
-
-```text
-/pldmgr/FC27_TR_KUR.elf
-/FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
-```
-
-ZIP'in dosya adını değiştirmeyin. Payload Manager'ın USB kökündeki ELF taraması kapalı olabilir; ELF için `/pldmgr` klasörünü kullanın. Kurucu USB0–USB7 bağlantı noktalarındaki ZIP'i arar.
-
-USB yerine PS5 depolamasını kullanıyorsanız eşdeğer yollar:
+Dosyaları PS5’e koymak isterseniz:
 
 ```text
 /data/pldmgr/payloads/FC27_TR/FC27_TR_KUR.elf
 /data/FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
 ```
 
-Yerel kurulum sırasında FTP bağlantısı veya internetten indirme yapılmaz. Dosyaları bu konumlara bir kez yerleştirmek yeterlidir.
+## Oyun klasörü nerede olabilir?
 
-## 3. Hedef oyun klasörünü belirleyin
+Klasör ismi serbesttir. `etaHEN` oluşturmanız veya oyunu iç diske taşımanız gerekmez. `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` aynı oyun kökünde bulunmalı; kimlik ve sürüm doğrulanır.
 
-v0.1.1-beta oyun klasörünü adına göre değil, içeriğine göre tanır. `sce_sys/param.json` içinde oyun kimliği **PPSA34015**, sürüm **01.000.003** veya **01.000.004** olmalı; aynı klasörde `ampr_emu.index` ve `Data/Ps5` bulunmalı. Kurulumdan önce indeksin gerekli Türkçe kayıtları da doğrulanır.
+- USB0–USB7: disk kökü ve en fazla dört klasör derinliği.
+- PS5 `/data`: kök ve en fazla 32 klasör derinliği.
+- Örnekler: `SSD/FC27`, `SSD/games/FC27`, `SSD/OnionHEN/games/FC27`, `/data/oyunlarim/FC27`.
 
-**Harici USB/SSD:** `/mnt/usb0`–`/mnt/usb7` disklerinin kökü ve kökten en fazla dört klasör derinliğindeki dizinler aranır. `etaHEN` veya `PPSA34015-app0` adı zorunlu değildir. Şu yerleşimler örnektir; oyunu bunlardan birine taşımak gerekmez:
+Gizli klasörler, sembolik bağlantılar, ayrı bağlı alt dosya sistemleri ve disk sistem klasörleri izlenmez. Her arama kökü en fazla 4.096 dizin / 32.768 girdiyle sınırlıdır. Birden fazla uygun kopyada veya eksik taramada otomatik seçim yapılmaz.
 
-```text
-SSD/FC27/
-SSD/games/FC27/
-SSD/PS5/FC27/
-SSD/etaHEN/games/PPSA34015-app0/
-SSD/OnionHEN/games/FC27/
-```
+## exFAT / FFPFSC görüntüsü nasıl kuruluyor?
 
-**PS5 iç depolaması:** `/data` dizininin kendisi ve altında en fazla **32 klasör derinliği** aranır. Oyun belirli bir `etaHEN`, `OnionHEN` veya `games` dizininde olmak zorunda değildir. Örneğin `/data/FC27`, `/data/oyunlarim/FC27` ve `/data/OnionHEN/games/FC27` aynı arama kapsamındadır.
+**Diskin exFAT biçimli olması ile oyunun `.exfat` dosyası olması farklıdır.** Açılmış klasör normal klasör yöntemiyle kurulur. Oyun tek görüntü dosyasıysa yeni yöntem onu salt okunur bağlar, kimlik ve indeksini kontrol eder.
 
-Arama kökünün kendisi derinlik 0 sayılır; USB’de dördüncü, `/data` altında 32. klasör seviyesi de kontrol edilir. Bir oyun `sce_sys/param.json` dosyasıyla karşılaşıldığında o oyunun alt klasörleri taranmaz. Sembolik bağlantılar, ayrı bağlanmış alt dosya sistemleri, gizli klasörler, `System Volume Information` ve `$RECYCLE.BIN` atlanır. Her arama kökü için 4.096 dizin ve 32.768 dizin girdisi sınırı vardır. Bu sınır aşılırsa bulunan ilk oyuna işlem yapılmaz; hedefi `game=` ile belirtmeniz istenir.
-
-Birden fazla uygun oyun klasörü bulunursa otomatik seçim yapılmaz. Oyun arama sınırlarından daha derindeyse, tarama sınırına ulaşılırsa veya birden fazla kopyası varsa aşağıdaki `game=` ayarını kullanın.
-
-Oyun klasörünün içeriği:
+Türkçe dosyaları ShadowMount’un gerçekten seçtiği `backports/PPSA34015` klasörüne kurulur. Mevcut backport yoksa yeni konum:
 
 ```text
-FC27/
+/data/homebrew/backports/PPSA34015/
 ├── ampr_emu.index
-├── sce_sys/param.json
 └── Data/Ps5/...
 ```
 
-### Oyunu taşımadan hedef seçmek
+Bunu elle oluşturmanız gerekmez. Var olan diğer backport dosyaları, `fakelib`, başlangıç dosyası ve unlock değiştirilmez. Görüntü ve `.vhash` dosyasına yazılmaz. **Game Compressor gerekmez.** Kurulumdan sonra bu ses klasörünü silmeyin; oyun sesleri buradan okur.
 
-`/data/FC27_TR/install.conf` adlı düz metin dosyasına tam yolu yazın. Bu ayar dosyası PS5’in `/data/FC27_TR` dizininde olmalı; USB’ye konan `install.conf` okunmaz.
+İçinde `ampr_assets.index` bulunan AMPR varlık paketleri bu modda kabul edilmez. Bu dosyayı silerek kontrolü atlatmayın.
+
+Mevcut backport indeksi görüntüyle Türkçe boyut alanları dışındaki yerlerde farklıysa kurucu durur. Başka oyunun tüm indeksini kopyalamayın.
+
+## Hedefi elle seçmek
+
+Özellikle klasör yedeği ve görüntü birlikte duruyorsa oynadığınız kaynağı seçin. Ayar dosyası **PS5’te** `/data/FC27_TR/install.conf` konumunda olmalıdır; USB’ye konan ayar okunmaz.
+
+Klasör örneği:
 
 ```ini
 game=/mnt/usb0/oyunlarim/FC27
+```
+
+Görüntü örneği:
+
+```ini
+game=/data/etaHEN/games/PPSA34015.ffpfsc
+```
+
+Görüntü yolunun ShadowMount’a kayıtlı gerçek kaynakla eşleşmesi gerekir. `/app0`, `/system_ex/app` veya geçici `/mnt/shadowmnt` yolunu seçmeyin. `overlay=` yazmanız gerekmez; hedef gerçek bağlamadan belirlenir.
+
+İsteğe bağlı ZIP seçimi:
+
+```ini
 zip=/mnt/usb0/FC27_TR/FC27_TURKCE_SPIKER_PPSA34015_v01.000.004.zip
 ```
 
-`game` oyun klasörünün kendisi, `zip` ZIP dosyasının tam yoludur. Örnekteki klasör ve USB bağlantı noktasını kendi konumunuza göre değiştirin. `game=` ile seçilen klasörün adı ve derinliği serbesttir; aynı kimlik, sürüm ve içerik kontrolleri uygulanır. Hedef normal, yazılabilir bir kaynak oyun klasörü olarak `/data` veya `/mnt/usb0`–`/mnt/usb7` altında bulunmalı; ayrı bağlanmış oyun görüntüsü veya sembolik bağlantı olmamalıdır. İhtiyacınız olmayan `zip=` satırını kaldırabilirsiniz.
+Otomatik ZIP araması sırasıyla `/data/FC27_TR`, `/data`, USB0–USB7’de `/FC27_TR` ve USB köküdür. Otomatik oyun araması önce klasörleri tarar; uygun klasör yoksa ShadowMount’un kayıtlı görüntüsünü sorgular.
 
-ZIP arama konumları değişmedi: önce `/data/FC27_TR`, sonra `/data`, ardından USB0–USB7 üzerindeki `/FC27_TR` ve USB kökü kontrol edilir; ilk bulunan uygun konum kullanılır. Belirli bir ZIP’i seçmek için `zip=` kullanın.
-
-Ayar dosyası yoksa otomatik arama ve kurulum modu kullanılır. `mode=install` satırı da açıkça kurulum modunu seçer.
-
-Sadece ön kontrol için aynı dosyaya şu satırı ekleyin:
+Yalnız kontrol için:
 
 ```ini
 mode=check
 ```
 
-Kontrol modu oyun dosyalarını değiştirmez. `/data/FC27_TR` dizini varsa sonuç günlük dosyasına kaydedilir. Mevcut dosyaların SHA256 değerlerini ve indeks boyutlarını kontrol edip gereken değişiklikleri bildirimle gösterir. Kuruluma geçeceğiniz zaman `mode=check` satırını kaldırın veya `mode=install` yapın.
+Kontrol oyun/katman dosyalarını veya yeni hedef klasörlerini oluşturmaz; günlük yazabilir. Görüntüyü geçici salt okunur bağlayıp kendi açtığı bağlamayı bırakabilir. Kurulum için satırı kaldırın veya `mode=install` yapın.
 
-## 4. ELF'i başlatın
+## Hatalar ve sınırlar
 
-Payload Manager'da listeyi yenileyin ve `FC27_TR_KUR` ELF'ini başlatın. Başlangıç bildiriminde **`FC27 TR v0.1.1-beta (USB+DATA)`** görünmeli; `USB+DATA` yoksa eski ELF’i çalıştırıyorsunuz. Bildirimler doğrulama ve kurulum aşamalarını gösterir. Büyük ses dosyalarının okunması depolamaya göre zaman alabilir; işlem bitmeden oyunu açmayın.
+Günlük: `/data/FC27_TR/installer.log`. Bu klasör varsa günlük tutulur.
 
-Başarı bildirimi sonrası oyunu açın. Ses/spiker ayarında **Türkçe** seçip çevrimdışı maça girin. Dosyalar tanınıyorsa ayrıca oyun içinden **İndir** seçmek gerekmez.
-
-Deneme sonucunu bildirirken oyun sürümünü, yükleyici ve firmware sürümünü, maça girilip girilmediğini ve Türkçe spikerin duyulup duyulmadığını yazın. Tam maç ve yeniden açılış sonuçları da uyumluluk listesine yardımcı olur.
-
-## Hata alırsanız
-
-Günlük:
-
-```text
-/data/FC27_TR/installer.log
-```
-
-Bu dizin varsa ve yazılabiliyorsa kurulum günlüğü tutulur. Sadece USB kullandıysanız günlük tutmak için `/data/FC27_TR` dizinini önceden oluşturabilirsiniz. Kontrol modu da bu dizine günlük yazabilir; oyun dosyalarına yazmaz.
-
-| Durum | Yapılacak işlem |
+| Mesaj / durum | Çözüm |
 | --- | --- |
-| FC27 çalışıyor | Oyunu tamamen kapatıp kurucuyu tekrar başlatın. |
-| Oyun klasörü bulunamadı | Oyunun açılmış klasör biçiminde olduğunu, `sce_sys/param.json`, `ampr_emu.index` ve `Data/Ps5` içeriğini kontrol edin. Gerekirse `game=` ile tam yolu seçin. v0.1.0-beta yalnız belirli klasörleri arıyordu; ilk v0.1.1-beta dosyasında da dahili arama belirli dizinlerle sınırlıydı. Güncel USB + DATA ELF’ini kullandığınızdan emin olun. |
-| ZIP bulunamadı | Dosya adını ve USB'deki `/FC27_TR` konumunu kontrol edin veya `zip=` ile tam yolu belirtin. |
-| Arama sınırına ulaşıldı | Diskteki tarama sınırı doldu; `install.conf` ile tam `game=` yolunu belirtin. Kısmi aramadan otomatik hedef seçilmez. |
-| Birden fazla oyun bulundu | `install.conf` ile kullanılacak `game=` yolunu belirtin. |
-| Kimlik/sürüm uyuşmuyor | Hedef `param.json` dosyasında PPSA34015 ve 01.000.003/01.000.004 bulunmalı. Başka oyun için kullanmayın. |
-| Gerekli indeks yolu yok veya boyutu farklı | Bu indeks mevcut veri paketiyle uyumlu değil. Başka kurulumun tüm indeksini kopyalamayın; günlükle birlikte durumu bildirin. |
-| ZIP CRC/SHA256 hatası | ZIP'in içeriği eksik, bozuk veya beklenen paketle farklıdır. Kurucu doğrulanmamış dosyaları kurmaz. |
-| Boş alan yetersiz | Hedef oyun depolamasında yer açın. |
-| `.tr-stage` / `.tr-previous` dosyaları kaldı | Önce günlüğü inceleyin. Özellikle `.tr-previous` dosyasını silmeyin; önceki dosyanın kurtarma kopyası olabilir. Hangi dosyanın asıl hâl olduğundan emin olmadan tekrar kurmayın. |
-| Kurulum başarılı, oyun hâlâ İndir istiyor | Dosya kontrolü oyun içi tanımayı tek başına kanıtlamaz. Kullanılan oyun paketi, backport ve yükleyici bilgisini bildirin. |
+| Oyun açık | Tamamen kapatın. Kurucu oyunu kendisi kapatmaz. |
+| ZIP yok | Dosya adını ve konumu düzeltin; gerekirse `zip=` kullanın. |
+| Arama sınırı / birden fazla kopya | `game=` ile hedef seçin. |
+| ShadowMount bağlantısı yok | ShadowMount’u başlatın; yerel API’nin varsayılan portta açık olduğunu kontrol edin. |
+| Kaynak görüntü eşleşmedi | ShadowMount’un oynattığı fiziksel görüntü dosyasını seçin. |
+| Bağlama başka işleme ait | Oyun ve diğer bağlama araçlarını kapatın; kendi hazırladığınız bağlamayı ShadowMount üzerinden ayırıp tekrar deneyin. |
+| Yeni klasör hazırlanıyor | ShadowMount’un varsayılan yaklaşık 10 saniyelik beklemesi otomatik uygulanır. Özel kararlılık ayarı 60 saniye ve üzerindeyse kurucu açıklayıcı hatayla durur. |
+| İndeks / paket uyumsuz | Kurulum değişiklik yapmadan durur; günlükle birlikte oyun sürümünü bildirin. |
+| CRC / SHA256 hatası | Ses ZIP’i farklı veya bozuk; beklenen paketi doğrulayın. |
+| Alan yetersiz | Seslerin kurulacağı depolamada yer açın; görüntünün iç boşluğu kullanılmaz. |
+| `.tr-stage`, `.tr-previous` veya kilit kaldı | Özellikle `.tr-previous` dosyalarını rastgele silmeyin; günlükle birlikte inceleyin. |
+| Dosyalar kuruldu, maç açılmıyor | Genel oyun dosyaları/backport sorunu ayrı incelenmeli. Türkçe kurucu oyun onarım paketi değildir. |
 
-Eski sürümdeki “Klasor oyun PPSA34015-app0/app bulunamadi. Sikistirilmis oyun desteklenmiyor.” mesajı genel bir açıklamaydı; oyunun sıkıştırılmış olduğunu tespit ettiği anlamına gelmez. ELF ve ZIP’i başka diske taşımak hedef oyunun bulunmasını tek başına sağlamaz.
+İşlem kesilirse normal hata geri alma mekanizması çalışır; elektrik kesintisinde otomatik kurtarma garantisi yoktur. Diğer uygulamalar aynı kaynağı taşırken veya bağlamasını değiştirirken kurulum yapmayın. ShadowMount beta3 API’si uygulamalar arasında atomik sahiplik kilidi sağlamaz; kurucu kimlik değişirse durur.
 
-## Dosyalarda yapılan değişiklik
+FW 13.60’ta Game Compressor için resmî projede uyumluluk değişiklikleri önerilmiştir ([PR #69](https://github.com/juma-sayeh/PS5-Game-Compressor/pull/69)); bunlar bu kurucunun 13.60’ta test edildiği anlamına gelmez. Bu yöntem Game Compressor’a bağlı değildir.
 
-Kurucu 10 Türkçe veri dosyasının boyutunu ve tam SHA256 değerini kontrol eder. Doğru dosyalar yerinde kalır. Değişecek dosyalar önce aynı klasörde `.tr-stage` geçici dosyalarına çıkarılır; ZIP CRC32 ve SHA256 kontrolü sonrasında asıl konumlarına geçirilir.
+## Hangi dosyalar değişir?
 
-Mevcut `ampr_emu.index` içinde yalnız ilgili Türkçe kayıtların **64 bit dosya boyutu alanları** güncellenir. Kayıtlar, dosya yolları, zaman alanları, kayıt sırası ve hash tablosu korunur. Kabul edilen eski boyut ya sıfır ya da bu paketin beklenen boyutudur; farklı bir dolu boyutta işlem durur.
+Yalnız bilinen 10 Türkçe varlık ve ilgili AMPR indeks boyutları. Değişecek dosyalar geçici alana çıkarılır, CRC/SHA256 ile doğrulanır; ardından yerleştirilir. Diğer indeks baytları korunur. Mevcut doğru dosyalar tekrar yazılmaz. Hata durumunda önceki hedef dosyaları geri alınır.
 
-Dosyalar değiştirilirken önceki sürümler geçici `.tr-previous` kopyalarında tutulur. Normal bir kurulum hatasında geri alınırlar; başarılı doğrulama sonrasında temizlenirler. Elektrik kesintisi sırasında otomatik geri alma garantisi yoktur. Kurucu kalmış geçici dosyaları bulursa üzerine yazmaz.
-
-Bu işlem başlangıç dosyasını, backportu, unlock paketini, oyun kütüphanelerini veya kayıtlı oyunları düzenlemeyi gerektirmez. Sorununuz maça girememe gibi genel bir oyun hatasıysa bu kurucu onu giderdiğini iddia etmez.
-
-## Sıkıştırılmış oyun görüntüsü
-
-Kurucu yazılabilir oyun klasörü içindir. **SSD’nin exFAT biçimli olması desteklenir.** Oyunun tek dosya olan `.ffpfsc` veya exFAT oyun görüntüsü biçiminde olması farklıdır; kurucu bu görüntülerin içine doğrudan ekleme yapmaz. Önce açılmış oyun klasörünü güncelleyip Türkçe spikerin çalıştığını doğrulayın; ardından kendi paketleme aracınızla görüntüyü yeniden oluşturabilirsiniz. Kurulum sonrası yeniden paketlenmiş oyun ayrıca doğrulanmadı.
-
-## PKG başlatıcısı
-
-PS5 ana ekranından aynı ELF kurucusunu başlatacak PKG hazırlanıyor. Önceki ELF sürümü PS5 üzerinde test edildi; v0.1.1-beta USB + DATA güncellemesinin ve PKG’nin PS5 testleri henüz yapılmadı. PKG kurulumu ve PS5 üzerindeki başlatma testi tamamlanınca bu bölüm güncellenecektir. PKG kendi başına ses ZIP'ini içermez.
+Açılmış klasörde dosyalar doğrudan oyun klasörüne; görüntüde ayrı backport klasörüne yazılır. Kurucu FTP kullanmaz. Görüntü için yalnız PS5’in yerel ShadowMount API’siyle haberleşir.
 
 ## PC ile manuel alternatif
 
