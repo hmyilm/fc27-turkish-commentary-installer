@@ -21,7 +21,7 @@ else
 fi
 mkdir -p "$task_object_dir"
 set --
-for task_relative in src/installer.c src/assets.c src/bundle.c \
+for task_relative in src/installer.c src/assets.c src/bundle.c src/shadowmount.c \
                      vendor/miniz/miniz.c vendor/miniz/miniz_tinfl.c \
                      vendor/miniz/miniz_zip.c vendor/sha256/sha256.c; do
     task_name=$(basename "$task_relative" .c)
