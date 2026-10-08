@@ -34,7 +34,8 @@ FC27, PPSA34015 ve oyun içindeki ses/veri varlıklarının hakları ilgili hak 
 - Sabitlenen commit: `748eabf1b7d17819528cabf367d8e27109d8fce3`.
 - Lisans: GPL-3.0-or-later; upstream `LICENSE` ve `NOTICE` dosyalarına bakın.
 - Bu C# kitaplığı PKG derleme bağımlılığıdır. .NET kitaplığı ve .NET çalışma zamanı PS5 PKG'sine dahil edilmez. Araç tarafından oluşturulan yardımcı PlayGo dosyaları LibProsperoPKG kaynaklıdır.
-- Upstream araç ayrıca gömülü `right.sprx` modülü sağlar. Bu modülün ayrı kaynak/lisans bilgisi upstream bildirimlerinde belgelenmediği için projenin kendi GPL kaynak kodu olarak tanımlanmaz. PKG yayın hazırlığı bu yardımcı modülün incelenmesini de kapsar; bu depoda şu an doğrulanan dağıtım ELF'tir.
+- PS5 paketinin `sce_sys/about/right.sprx` dosyası, projenin kendi [launcher/src/right_stub.c](launcher/src/right_stub.c) kaynağından derlenir ve GPL-3.0-or-later lisanslıdır. Upstream kitaplığın beraberinde gelen ikili `right.sprx` modülü PS5 paketine veya bu depoya dahil edilmez. Paket geri çıkarılarak yardımcı modülün kendi kaynak derlememizle aynı olduğu doğrulanır.
+- Kitaplığın sabit revizyonunun ayrı derleme kopyasına, macOS için projeye ait GPL-3.0-or-later lisanslı SHA3-256 uygulaması ve tek dolgu kaydını işleyen okuyucu düzeltmesi uygulanır. Değişiklikler [launcher/tools/prepare_pkg_library.py](launcher/tools/prepare_pkg_library.py) dosyasında açıktır. SHA3 uygulaması [FIPS 202/Keccak algoritmasına](https://keccak.team/keccak_specs_summary.html) dayanır ve bağımsız Python `hashlib` sonuçlarıyla karşılaştırılmıştır.
 - Derleme için kullanılan resmi .NET SDK da PS5 paketine eklenmez. Başlatıcı köprüsü, GPL-3.0-or-later lisanslı John Törnblom PS5 payload SDK örneğinden uyarlanır.
 
 PKG'nin PS5 başlatma testi, ELF kurucusunun testinden ayrı tutulur.
