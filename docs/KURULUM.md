@@ -2,6 +2,8 @@
 
 Bu kurucu, PPSA34015'in Türkçe spiker dosyalarını yerel ZIP'ten oyun klasörüne ekler. Kaynak ses dosyalarının sürümü v01.000.004'tür. Hedefte v01.000.003 ve v01.000.004 kabul edilir; v003'te oyun içi uyumluluk henüz doğrulanmadı.
 
+8 Ekim yayın ELF'inde yalnız derleme yolu metinleri sadeleştirildi. Önceki ELF konsol testlerini geçti; yeni ikili için tekrar konsol testi bekliyor. İki derlemenin SHA256 değerleri ve karşılaştırma sonucu [test durumunda](TEST_DURUMU.md).
+
 ## Gerekenler
 
 - ELF başlatabilen PS5 ortamı ve Payload Manager.

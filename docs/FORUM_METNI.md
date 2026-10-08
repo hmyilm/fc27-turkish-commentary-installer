@@ -6,6 +6,8 @@ Kaynak v01.000.004 kurulumunda çevrimdışı maç ve Türkçe spiker çalışt�
 
 Native ELF de PS5 üzerinde denendi: 10 dosyanın tam hash kontrolü geçti; kontrollü olarak eksiltilen bir Türkçe dosya ve indeks kaydı ZIP'ten geri kuruldu. Sonuç konsoldan tekrar okunarak doğrulandı. Bilgisayar testinde 10 dosyalık kurulum ve hata sırasında geri alma da kontrol edildi.
 
+Bu konsol testleri 7 Ekim derlemesine ait. 8 Ekim yayın dosyasında kişisel derleme yolu metinleri kaldırıldı; derlenen çalıştırılabilir kod bölümleri aynı, ancak yeni ikili için tekrar konsol testi henüz yapılmadı.
+
 Araç v01.000.003 ve v01.000.004'ü kabul ediyor. Dosyaların kaynağı v004; v003 ve farklı backportlar üzerinde oyun içi test henüz yok. Ayrıntılar GitHub'daki **Test ve uyumluluk durumu** sayfasında.
 
 GitHub'da kaynak kod, ELF ve kurulum rehberi var. Oyun ve Türkçe ses varlıkları depoda bulunmuyor; kurucu ayrıca edinilmiş uyumlu ZIP'i kullanıyor. Açılmış veri boyutu yaklaşık 1,50 GB.

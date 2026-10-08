@@ -1,6 +1,6 @@
 # Test ve uyumluluk durumu
 
-Son güncelleme: 7 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenmeyen koşulları ayrı gösterir.
+Son güncelleme: 8 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenmeyen koşulları ayrı gösterir.
 
 ## Oyun içi sonuç
 
@@ -23,7 +23,7 @@ Son güncelleme: 7 Ekim 2026. Bu sayfa doğrulanan sonuçları ve henüz denenme
 
 ## Native ELF'in PS5 testi
 
-Test edilen ELF: **191.808 bayt**; SHA256:
+7 Ekim'de konsolda test edilen ELF: **191.808 bayt**; SHA256:
 
 ```text
 c51d10e7c2606fd2877b37871130616b7a794c9d6f2c9bf2ae5ed01c2a381f11
@@ -39,6 +39,18 @@ FW 13.20, PPSA34015 v01.000.004 ve ShadowMount+ 1.7beta3 ortamında:
 - İlk denemede desteklenmeyen `futimens` çağrısı tespit edildi. Son ELF desteklenen `futimes` alternatifiyle bu testi geçti.
 
 Bu PS5 testi mevcut çalışan kuruluma bir dosyanın yeniden kurulmasını doğrular. Başka oyun paketlerinde veya v003'te oyun içi uyumluluğu kanıtlamaz. Sonuç: [native test kaydı](../tests/native-results.txt).
+
+### 8 Ekim yayın derlemesi
+
+Yayın dosyasında geliştiricinin yerel klasör yolu kalmaması için derleme betiğine `-ffile-prefix-map` eklendi. Kurucu kaynak kodu değişmedi. Yeni ELF **191.808 bayt**, SHA256:
+
+```text
+68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048
+```
+
+Yedi nesne dosyasının tüm çalıştırılabilir bölümleri önceki derlemeyle bayt bayt aynı. Beş nesne dosyası bütünüyle aynı; kalan ikisinde yalnız miniz'in iki assert kaynak yolu metni ve bu metinlere ait sembol boyut/konum bilgileri değişti. Bağlama sırasında yeni metin konumlarına göre adresler yeniden hesaplandı. İkili dosyanın SHA256 değeri bu nedenle değişti.
+
+Yeni yayın derlemesi konsolda henüz yeniden çalıştırılmadı; yukarıdaki 7 Ekim PS5 testleri eski SHA256'ya aittir. [Derleme karşılaştırma kaydı](../tests/build-normalization-results.txt).
 
 ### Kurulumun bilgisayar üzerinde entegrasyon testi
 
