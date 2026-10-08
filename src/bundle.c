@@ -35,6 +35,7 @@ struct tr_bundle {
     uint64_t total_bytes;
     size_t heap_used;
     int read_errno;
+    int cancelled;
     mz_zip_archive zip;
     mz_uint file_index[TR_ASSET_COUNT];
 };
@@ -286,6 +287,7 @@ uint64_t bundle_total_bytes(const tr_bundle *bundle)
 
 typedef struct {
     int fd;
+    tr_bundle *bundle;
     int write_errno;
     int invalid_stream;
     uint64_t bytes;
@@ -300,6 +302,10 @@ static size_t asset_write(void *opaque, mz_uint64 offset,
 {
     extraction_state *state = opaque;
     size_t done = 0;
+    if (state->bundle->cancelled) {
+        state->write_errno = ECANCELED;
+        return 0;
+    }
     if (offset != state->bytes || state->bytes > state->expected ||
         (uint64_t)bytes > state->expected - state->bytes) {
         state->invalid_stream = 1;
@@ -340,6 +346,7 @@ int bundle_extract_asset(tr_bundle *bundle, size_t asset_index, int output_fd,
     }
     memset(&state, 0, sizeof(state));
     state.fd = output_fd;
+    state.bundle = bundle;
     state.expected = tr_assets[asset_index].size;
     state.progress = progress;
     state.opaque = opaque;
@@ -347,6 +354,10 @@ int bundle_extract_asset(tr_bundle *bundle, size_t asset_index, int output_fd,
     bundle->read_errno = 0;
     if (progress)
         progress(0, state.expected, opaque);
+    if (bundle->cancelled) {
+        error_set(err, err_cap, "ZIP extraction cancelled");
+        return -1;
+    }
     /* flags=0 requires decompression and miniz's complete CRC32 validation. */
     if (!mz_zip_reader_extract_to_callback(&bundle->zip,
              bundle->file_index[asset_index], asset_write, &state, 0)) {
@@ -364,6 +375,10 @@ int bundle_extract_asset(tr_bundle *bundle, size_t asset_index, int output_fd,
                       tr_assets[asset_index].path, zip_error(bundle));
         return -1;
     }
+    if (bundle->cancelled) {
+        error_set(err, err_cap, "ZIP extraction cancelled");
+        return -1;
+    }
     if (state.bytes != state.expected) {
         error_set(err, err_cap, "Extracted size mismatch: %s", tr_assets[asset_index].path);
         return -1;
@@ -374,6 +389,12 @@ int bundle_extract_asset(tr_bundle *bundle, size_t asset_index, int output_fd,
         return -1;
     }
     return 0;
+}
+
+void bundle_request_cancel(tr_bundle *bundle)
+{
+    if (bundle)
+        bundle->cancelled = 1;
 }
 
 void bundle_close(tr_bundle *bundle)

@@ -26,6 +26,9 @@ uint64_t bundle_total_bytes(const tr_bundle *bundle);
 int bundle_extract_asset(tr_bundle *bundle, size_t asset_index, int output_fd,
                          bundle_progress_fn progress, void *opaque,
                          char *err, size_t err_cap);
+/* Cooperative cancellation, called from the progress callback. A cancelled
+ * bundle cannot be reused; extraction stops at the next bounded chunk. */
+void bundle_request_cancel(tr_bundle *bundle);
 void bundle_close(tr_bundle *bundle);
 
 /* Streams an existing regular file and verifies both its full size and hash.

@@ -6,6 +6,9 @@
  */
 #include "assets.h"
 #include "bundle.h"
+#ifndef TR_HOST_TEST
+#include "shadowmount.h"
+#endif
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -45,6 +48,7 @@
 typedef struct {
     char game[TR_PATH];
     char zip[TR_PATH];
+    char overlay[TR_PATH];
     int check_only;
 } options;
 
@@ -65,9 +69,19 @@ static size_t log_bytes;
 static volatile sig_atomic_t cancelled;
 static char created_dirs[CREATED_DIR_MAX][TR_PATH];
 static size_t created_dir_count;
+#ifndef TR_HOST_TEST
+static sm_overlay_context image_context;
+static int image_context_initialized;
+#endif
 #ifdef TR_HOST_TEST
 static unsigned test_fail_rename;
 static unsigned test_rename_count;
+#endif
+
+#ifdef TR_OVERLAY_TEST
+static void (*test_overlay_validation_hook)(const options *, unsigned);
+static void (*test_overlay_final_hash_hook)(const options *);
+static unsigned test_overlay_validation_count;
 #endif
 
 #ifndef TR_HOST_TEST
@@ -504,8 +518,9 @@ static int patch_index(const unsigned char *original, size_t size,
     uint64_t hash_offset = little64(original + 32);
     uint64_t slot_size = little32(original + 40), slots = little32(original + 44);
     uint64_t blob_start = 48 + count * 24;
-    if (!count || count > 100000 || blob_start > size || paths > size - blob_start ||
-        hash_offset < blob_start + paths || hash_offset > size ||
+    if (!count || count > 100000 || !paths || blob_start > size || paths > size - blob_start ||
+        slot_size != 16 || !slots || (slots & (slots - 1)) || slots < count ||
+        hash_offset % 8 || hash_offset < blob_start + paths || hash_offset > size ||
         slot_size * slots != size - hash_offset)
         return fail(err, "AMPR indeks sinirlari tutarsiz.");
     char **all_paths = calloc((size_t)count, sizeof(*all_paths));
@@ -673,7 +688,7 @@ static int load_config(options *opt, char *err) {
     size_t length;
     if (read_file(CONFIG_PATH, 8192, &data, &length, NULL, err))
         return -1;
-    int seen_game = 0, seen_zip = 0, seen_mode = 0, result = 0;
+    int seen_game = 0, seen_zip = 0, seen_overlay = 0, seen_mode = 0, result = 0;
     if (memchr(data, 0, length)) {
         free(data);
         return fail(err, "install.conf gecersiz.");
@@ -698,6 +713,8 @@ static int load_config(options *opt, char *err) {
             result = copy_path(opt->game, equal, err);
         else if (!strcmp(line, "zip") && !seen_zip++)
             result = copy_path(opt->zip, equal, err);
+        else if (!strcmp(line, "overlay") && !seen_overlay++)
+            result = copy_path(opt->overlay, equal, err);
         else if (!strcmp(line, "mode") && !seen_mode++) {
             if (!strcmp(equal, "check"))
                 opt->check_only = 1;
@@ -906,7 +923,7 @@ static int scan_game_root(const char *root, unsigned max_depth,
     return walk_game_directories(root, 0, &search, err);
 }
 
-static int discover_game(char out[TR_PATH], char *err) {
+static int discover_game_candidate(char out[TR_PATH], char *err) {
     out[0] = 0;
     if (scan_game_root("/data", DISCOVERY_DATA_MAX_DEPTH, out, err))
         return -1;
@@ -916,10 +933,74 @@ static int discover_game(char out[TR_PATH], char *err) {
         if (scan_game_root(root, DISCOVERY_USB_MAX_DEPTH, out, err))
             return -1;
     }
+    return 0;
+}
+
+static int discover_game(char out[TR_PATH], char *err) {
+    if (discover_game_candidate(out, err))
+        return -1;
     if (!out[0])
         return fail(err, "Uygun PPSA34015 oyun klasoru bulunamadi. Klasor konumunu ve param.json/indeks dosyalarini kontrol edin; install.conf ile game= belirtilebilir.");
     return 0;
 }
+
+#ifndef TR_HOST_TEST
+static int image_game_closed(void *unused, char *err) {
+    (void)unused;
+    return require_closed(err);
+}
+
+/* Folder discovery must finish successfully before automatic image fallback.
+ * A partial or ambiguous scan is never silently treated as an absent game. */
+static int prepare_native_target(options *opt, char *err) {
+    char selector[TR_PATH] = {0};
+    if (!opt->game[0]) {
+        if (discover_game_candidate(opt->game, err))
+            return -1;
+        if (opt->game[0]) {
+            if (opt->overlay[0])
+                return fail(err, "Klasor oyunda overlay= kullanilamaz; bu ayari kaldirin.");
+            return 0;
+        }
+    } else {
+        struct stat st;
+        if (lstat(opt->game, &st))
+            return fail(err, "Secilen oyun yolu okunamadi: %s", opt->game);
+        if (S_ISDIR(st.st_mode) && !opt->overlay[0])
+            return 0;
+        if (!S_ISREG(st.st_mode))
+            return fail(err, "Goruntu icin game= fiziksel oyun disk dosyasini gostermeli.");
+        strcpy(selector, opt->game);
+    }
+    sm_overlay_hooks hooks = {0};
+    hooks.game_closed = image_game_closed;
+    sm_overlay_init(&image_context, &hooks);
+    image_context_initialized = 1;
+    note("FC27 TR: ShadowMount oyun goruntusu kontrol ediliyor.");
+    if (sm_overlay_prepare(&image_context, selector[0] ? selector : NULL,
+                           opt->check_only, err))
+        return -1;
+    if (opt->overlay[0] && strcmp(opt->overlay, image_context.target))
+        return fail(err, "overlay= ShadowMount'un sectigi klasorle uyusmuyor.");
+    if (copy_path(opt->game, image_context.source, err) ||
+        copy_path(opt->overlay, image_context.target, err))
+        return -1;
+    if (opt->check_only && image_context.target_missing)
+        note("FC27 TR kontrol: yeni ses klasoru kurulumda olusturulacak. Kontrolde klasor acilmadi.");
+    return 0;
+}
+
+static int cleanup_native_target(void) {
+    if (!image_context_initialized)
+        return 0;
+    char cleanup_error[TR_ERR] = {0};
+    int result = sm_overlay_cleanup(&image_context, cleanup_error);
+    image_context_initialized = 0;
+    if (result)
+        note("FC27 TR baglama temizligi: %s", cleanup_error);
+    return result;
+}
+#endif
 
 #if !defined(TR_HOST_TEST) || defined(TR_DISCOVERY_TEST)
 /* Called after realpath, so component traversal has already been normalized. */
@@ -940,7 +1021,7 @@ static int game_storage_root(const char *canonical, char root[32]) {
 }
 #endif
 
-static int canonical_game(char path[TR_PATH], char *err) {
+static int canonical_game_path(char path[TR_PATH], int mounted_source, char *err) {
     char trimmed[TR_PATH];
     strcpy(trimmed, path);
     size_t path_length = strlen(trimmed);
@@ -963,8 +1044,10 @@ static int canonical_game(char path[TR_PATH], char *err) {
        or USB storage is supported; do not redirect installs into /app0 etc. */
     char storage[32];
     struct stat storage_st;
-    ok = ok && game_storage_root(canonical, storage) &&
-         !stat(storage, &storage_st) && st.st_dev == storage_st.st_dev;
+    ok = ok && (mounted_source || (game_storage_root(canonical, storage) &&
+         !stat(storage, &storage_st) && st.st_dev == storage_st.st_dev));
+#else
+    (void)mounted_source;
 #endif
     if (!ok) {
         free(canonical);
@@ -976,6 +1059,86 @@ static int canonical_game(char path[TR_PATH], char *err) {
     }
     strcpy(path, canonical);
     free(canonical);
+    return 0;
+}
+
+static int canonical_game(char path[TR_PATH], char *err) {
+    return canonical_game_path(path, 0, err);
+}
+
+/* Native integration boundary. The resolver must authenticate this exact
+ * mounted source and the loader-selected writable overlay, without mounting
+ * or writing anything here. This guard is checked again before/after commit.
+ * Configuration alone must never authorize an arbitrary mounted source. */
+static int verify_overlay_source(const options *opt, char *err) {
+#ifdef TR_HOST_TEST
+#ifdef TR_OVERLAY_TEST
+    if (test_overlay_validation_hook)
+        test_overlay_validation_hook(opt, ++test_overlay_validation_count);
+#endif
+    (void)opt;
+    (void)err;
+    return 0;
+#else
+    if (!image_context_initialized || strcmp(opt->game, image_context.source) ||
+        strcmp(opt->overlay, image_context.target))
+        return fail(err, "Goruntu kurulumu dogrulanmis ShadowMount kaynagi gerektirir.");
+    return sm_overlay_revalidate(&image_context, err);
+#endif
+}
+
+static int reject_asset_pack(const char *game, char *err) {
+    char path[TR_PATH];
+    struct stat st;
+    if (path_join(path, game, "ampr_assets.index", err))
+        return -1;
+    if (!lstat(path, &st))
+        return fail(err, "AMPR varlik paketi (ampr_assets.index) bulunan oyunda overlay kurulumu desteklenmiyor.");
+    if (errno != ENOENT)
+        return fail(err, "AMPR varlik paketi denetlenemedi: %s", path);
+    return 0;
+}
+
+static int path_contains(const char *parent, const char *child) {
+    size_t n = strlen(parent);
+    return !strncmp(parent, child, n) && (child[n] == 0 || child[n] == '/');
+}
+
+/* Resolve an existing parent without creating the overlay in check mode. */
+static int prepare_overlay_path(options *opt, char anchor[TR_PATH],
+                                struct stat *anchor_stat, char *err) {
+    size_t length = strlen(opt->overlay);
+    while (length > 1 && opt->overlay[length - 1] == '/')
+        opt->overlay[--length] = 0;
+    if (opt->overlay[0] != '/' || !path_is_relative_safe(opt->overlay + 1))
+        return fail(err, "Overlay icin normal tam klasor yolu gerekli.");
+    if (path_contains(opt->game, opt->overlay) || path_contains(opt->overlay, opt->game))
+        return fail(err, "Overlay ve kaynak oyun klasorleri birbirinden ayri olmali.");
+    strcpy(anchor, opt->overlay);
+    for (;;) {
+        if (!lstat(anchor, anchor_stat))
+            break;
+        if (errno != ENOENT)
+            return fail(err, "Overlay ust klasoru okunamadi: %s", anchor);
+        char *slash = strrchr(anchor, '/');
+        if (!slash || slash == anchor)
+            return fail(err, "Overlay icin mevcut bir depolama klasoru gerekli.");
+        *slash = 0;
+    }
+    if (!S_ISDIR(anchor_stat->st_mode))
+        return fail(err, "Overlay ust yolu normal klasor degil.");
+    char *canonical = realpath(anchor, NULL);
+    int same = canonical && !strcmp(canonical, anchor);
+    free(canonical);
+    if (!same)
+        return fail(err, "Overlay yolunda sembolik baglanti kullanilamaz.");
+#ifndef TR_HOST_TEST
+    char storage[32];
+    struct stat storage_stat;
+    if (!game_storage_root(opt->overlay, storage) || stat(storage, &storage_stat) ||
+        storage_stat.st_dev != anchor_stat->st_dev)
+        return fail(err, "Overlay normal /data veya USB depolamasinda olmali.");
+#endif
     return 0;
 }
 
@@ -1099,10 +1262,15 @@ static int write_all(int fd, const void *bytes, size_t length, char *err) {
 typedef struct {
     uint64_t previous, total;
     unsigned next;
+    tr_bundle *bundle;
 } progress_state;
 static void extraction_progress(uint64_t done, uint64_t total, void *opaque) {
     progress_state *state = opaque;
     (void)total;
+    if (cancelled) {
+        bundle_request_cancel(state->bundle);
+        return;
+    }
     uint64_t global = state->previous + done;
     unsigned percent = state->total ? (unsigned)(global * 100 / state->total) : 100;
     while (state->next <= 75 && percent >= state->next) {
@@ -1207,68 +1375,157 @@ static int rollback(transaction_file files[TR_ASSET_COUNT + 1]) {
                 file->stage_owned = 0;
         }
     }
+    return good ? 0 : -1;
+}
+
+static int remove_created_dirs(void) {
+    int good = 1;
     for (size_t i = created_dir_count; i > 0; --i)
         if (rmdir(created_dirs[i - 1]) && errno != ENOENT)
             good = 0;
+    created_dir_count = 0;
     return good ? 0 : -1;
+}
+
+typedef struct {
+    struct stat directory;
+    struct stat index_stat;
+    struct stat param_stat;
+    char index_path[TR_PATH];
+    char param_path[TR_PATH];
+    unsigned char *index;
+    unsigned char *param;
+    size_t index_length;
+    size_t param_length;
+} overlay_source_snapshot;
+
+static int snapshot_overlay_source(const options *opt, overlay_source_snapshot *source,
+                                    char *err) {
+    if (lstat(opt->game, &source->directory) || !S_ISDIR(source->directory.st_mode) ||
+        path_join(source->index_path, opt->game, "ampr_emu.index", err) ||
+        path_join(source->param_path, opt->game, "sce_sys/param.json", err))
+        return fail(err, "Overlay kaynak klasoru dogrulanamadi.");
+    if (read_file(source->index_path, INDEX_MAX, &source->index, &source->index_length,
+                  &source->index_stat, err) ||
+        read_file(source->param_path, PARAM_MAX, &source->param, &source->param_length,
+                  &source->param_stat, err))
+        return -1;
+    return 0;
+}
+
+static int overlay_source_unchanged(const options *opt,
+                                    const overlay_source_snapshot *source, char *err) {
+    struct stat now;
+    if (verify_overlay_source(opt, err) || reject_asset_pack(opt->game, err) ||
+        reject_asset_pack(opt->overlay, err))
+        return -1;
+    if (lstat(opt->game, &now) || !S_ISDIR(now.st_mode) ||
+        now.st_dev != source->directory.st_dev || now.st_ino != source->directory.st_ino ||
+        lstat(source->index_path, &now) || !stat_same(&now, &source->index_stat) ||
+        lstat(source->param_path, &now) || !stat_same(&now, &source->param_stat))
+        return fail(err, "Overlay kaynak oyunu kurulum sirasinda degisti; islem durduruldu.");
+    if (same_file_bytes(source->index_path, source->index, source->index_length, err) ||
+        same_file_bytes(source->param_path, source->param, source->param_length, err))
+        return -1;
+    return 0;
 }
 
 static int install(options *opt, char *err) {
     int result = -1, version003 = 0, lock_owned = 0, lock_fd = -1;
-    char lock_path[TR_PATH] = {0};
+    int overlay_mode = opt->overlay[0] != 0;
+    char lock_path[TR_PATH] = {0}, anchor[TR_PATH] = {0};
+    struct stat anchor_stat;
+    const char *target = NULL;
     tr_bundle *bundle = NULL;
-    unsigned char *index_original = NULL, *index_patched = NULL;
+    unsigned char *index_original = NULL, *index_patched = NULL, *source_patched = NULL;
     size_t index_length = 0;
+    overlay_source_snapshot source;
+    memset(&source, 0, sizeof(source));
     transaction_file files[TR_ASSET_COUNT + 1];
     memset(files, 0, sizeof(files));
+    created_dir_count = 0;
     if ((!opt->zip[0] && discover_zip(opt->zip, err)) ||
-        (!opt->game[0] && discover_game(opt->game, err)) || canonical_game(opt->game, err) ||
-        validate_param(opt->game, &version003, err))
+        (!opt->game[0] && discover_game(opt->game, err)))
+        goto done;
+    if (overlay_mode) {
+        if (verify_overlay_source(opt, err) || canonical_game_path(opt->game, 1, err) ||
+            prepare_overlay_path(opt, anchor, &anchor_stat, err))
+            goto done;
+        target = opt->overlay;
+        if (reject_asset_pack(opt->game, err) || reject_asset_pack(target, err))
+            goto done;
+    } else {
+        if (canonical_game(opt->game, err))
+            goto done;
+        target = opt->game;
+        strcpy(anchor, target);
+    }
+    if (validate_param(opt->game, &version003, err))
         goto done;
     note("FC27 TR: %s basladi. Surum %s.", opt->check_only ? "kontrol" : "kurulum",
          version003 ? "01.000.003 (oyun uyumlulugu henuz dogrulanmadi)" : "01.000.004");
-    printf("Oyun: %s\nZIP: %s\n", opt->game, opt->zip);
+    printf("Kaynak: %s\nHedef: %s\nZIP: %s\n", opt->game, target, opt->zip);
+    if (overlay_mode)
+        note("FC27 TR: kaynak goruntu degistirilmeden secili overlay klasorune kurulacak.");
     if (bundle_open(opt->zip, &bundle, err, TR_ERR))
         goto done;
     unsigned changes;
-    if (prepare_transaction_file(&files[TR_ASSET_COUNT], opt->game, "ampr_emu.index", err) ||
-        !files[TR_ASSET_COUNT].exists) {
-        if (!err[0])
-            fail(err, "ampr_emu.index bulunamadi.");
+    transaction_file *index_file = &files[TR_ASSET_COUNT];
+    if (prepare_transaction_file(index_file, target, "ampr_emu.index", err))
+        goto done;
+    if (!overlay_mode && !index_file->exists) {
+        fail(err, "ampr_emu.index bulunamadi.");
         goto done;
     }
-    if (read_file(files[TR_ASSET_COUNT].path, INDEX_MAX, &index_original,
-                  &index_length, &files[TR_ASSET_COUNT].before, err) ||
+    if (overlay_mode) {
+        unsigned source_changes;
+        if (snapshot_overlay_source(opt, &source, err) ||
+            patch_index(source.index, source.index_length, &source_patched, &source_changes, err))
+            goto done;
+    }
+    const char *index_origin = index_file->exists ? index_file->path : source.index_path;
+    if (read_file(index_origin, INDEX_MAX, &index_original, &index_length,
+                  index_file->exists ? &index_file->before : NULL, err) ||
         patch_index(index_original, index_length, &index_patched, &changes, err))
         goto done;
-    files[TR_ASSET_COUNT].change = changes != 0;
-    uint64_t total_needed = changes ? index_length : 0;
+    if (overlay_mode && (index_length != source.index_length ||
+                         memcmp(index_patched, source_patched, index_length))) {
+        fail(err, "Mevcut overlay indeksi kaynak oyunla uyusmuyor; diger kayitlar degistirilmedi.");
+        goto done;
+    }
+    free(source_patched);
+    source_patched = NULL;
+    index_file->change = changes != 0 || !index_file->exists;
+    uint64_t total_needed = index_file->change ? index_length : 0;
     uint64_t audio_needed = 0;
     unsigned changed_files = 0;
     for (int i = 0; i < TR_ASSET_COUNT; ++i) {
-        if (prepare_transaction_file(&files[i], opt->game, tr_assets[i].path, err))
+        if (prepare_transaction_file(&files[i], target, tr_assets[i].path, err))
             goto done;
         char hash_error[TR_ERR];
         files[i].change = !files[i].exists ||
             bundle_hash_file(files[i].path, tr_assets[i].size, tr_assets[i].sha256hex,
                              hash_error, sizeof(hash_error)) != 0;
         if (files[i].change) {
-            if (UINT64_MAX - total_needed < tr_assets[i].size)
+            if (UINT64_MAX - total_needed < tr_assets[i].size) {
+                fail(err, "Kurulum boyutu sinir disi.");
                 goto done;
+            }
             total_needed += tr_assets[i].size;
             audio_needed += tr_assets[i].size;
             changed_files++;
         }
     }
-    if (path_join(lock_path, opt->game, ".FC27_TR_INSTALL.lock", err) ||
+    if (path_join(lock_path, target, ".FC27_TR_INSTALL.lock", err) ||
         must_be_missing(lock_path, err))
         goto done;
     int game_closed = game_is_closed(err);
     if (game_closed < 0)
         goto done;
     if (opt->check_only) {
-        if (changed_files || changes)
-            note("FC27 TR kontrol: %u dosya ve %u indeks kaydi gerekli. Yazma yapilmadi.", changed_files, changes);
+        if (changed_files || index_file->change)
+            note("FC27 TR kontrol: %u dosya, %u indeks boyutu; indeks yazimi %s. Yazma yapilmadi.",
+                 changed_files, changes, index_file->change ? "gerekli" : "gerekmiyor");
         else
             note("FC27 TR kontrol: zaten kurulu, 10 dosyanin SHA256 ve indeks boyutlari dogru.");
         if (!game_closed)
@@ -1280,13 +1537,25 @@ static int install(options *opt, char *err) {
         fail(err, "FC27 acik. Oyunu tamamen kapatip yeniden deneyin.");
         goto done;
     }
-    if (!changed_files && !changes) {
+    if (!changed_files && !index_file->change) {
         note("FC27 TR zaten kurulu: 10 dosyanin SHA256 ve indeks boyutlari dogru. Degisiklik yapilmadi.");
         result = 0;
         goto done;
     }
-    if (check_space(opt->game, total_needed, err) || require_closed(err))
+    if (check_space(anchor, total_needed, err) || require_closed(err))
         goto done;
+    if (overlay_mode) {
+        struct stat now;
+        if (overlay_source_unchanged(opt, &source, err))
+            goto done;
+        if (lstat(anchor, &now) || !S_ISDIR(now.st_mode) ||
+            now.st_dev != anchor_stat.st_dev || now.st_ino != anchor_stat.st_ino) {
+            fail(err, "Overlay ust klasoru kurulum sirasinda degisti.");
+            goto done;
+        }
+        if (parent_dirs(anchor, lock_path, 1, err))
+            goto done;
+    }
     lock_fd = open(lock_path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
     if (lock_fd < 0) {
         fail(err, "Kurulum kilidi olusturulamadi: %s", strerror(errno));
@@ -1306,7 +1575,7 @@ static int install(options *opt, char *err) {
         goto done;
     }
     lock_fd = -1;
-    progress_state progress = {0, audio_needed, 25};
+    progress_state progress = {0, audio_needed, 25, bundle};
     for (int i = 0; i < TR_ASSET_COUNT; ++i) {
         if (!files[i].change)
             continue;
@@ -1314,7 +1583,7 @@ static int install(options *opt, char *err) {
             fail(err, "Kurulum iptal edildi.");
             goto done;
         }
-        if (parent_dirs(opt->game, files[i].path, 1, err))
+        if (parent_dirs(target, files[i].path, 1, err))
             goto done;
         int fd = open(files[i].stage, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
         if (fd < 0) {
@@ -1328,15 +1597,17 @@ static int install(options *opt, char *err) {
             extracted = finish_stage(fd, &files[i], err);
         if (close(fd) && !extracted)
             extracted = fail(err, "Gecici ses dosyasi kapatilamadi.");
+        if (cancelled)
+            extracted = fail(err, "Kurulum iptal edildi.");
         if (extracted)
             goto done;
         progress.previous += tr_assets[i].size;
     }
-    if (changes && (stage_index(&files[TR_ASSET_COUNT], index_patched, index_length, err) ||
-                    same_file_bytes(files[TR_ASSET_COUNT].stage, index_patched, index_length, err)))
+    if (index_file->change && (stage_index(index_file, index_patched, index_length, err) ||
+                              same_file_bytes(index_file->stage, index_patched, index_length, err)))
         goto done;
-    if (require_closed(err) || same_file_bytes(files[TR_ASSET_COUNT].path,
-                                              index_original, index_length, err))
+    if (require_closed(err) || same_file_bytes(index_origin, index_original, index_length, err) ||
+        (overlay_mode && overlay_source_unchanged(opt, &source, err)))
         goto done;
     for (int i = 0; i < TR_ASSET_COUNT + 1; ++i)
         if (original_unchanged(&files[i], err))
@@ -1345,14 +1616,34 @@ static int install(options *opt, char *err) {
     for (int i = 0; i < TR_ASSET_COUNT; ++i)
         if (files[i].change && (require_closed(err) || commit_file(&files[i], err)))
             goto done;
-    if (require_closed(err) || commit_file(&files[TR_ASSET_COUNT], err) ||
-        same_file_bytes(files[TR_ASSET_COUNT].path, index_patched, index_length, err))
+    if (require_closed(err) || commit_file(index_file, err) ||
+        same_file_bytes(index_file->path, index_patched, index_length, err))
         goto done;
     note("FC27 TR: yerlestirilen dosyalarin SHA256 geri okumasi yapiliyor.");
+#ifdef TR_OVERLAY_TEST
+    if (test_overlay_final_hash_hook)
+        test_overlay_final_hash_hook(opt);
+#endif
     for (int i = 0; i < TR_ASSET_COUNT; ++i)
-        if (files[i].committed && bundle_hash_file(files[i].path, tr_assets[i].size,
-                                                 tr_assets[i].sha256hex, err, TR_ERR))
+        if (bundle_hash_file(files[i].path, tr_assets[i].size,
+                             tr_assets[i].sha256hex, err, TR_ERR))
             goto done;
+    if (overlay_mode && overlay_source_unchanged(opt, &source, err))
+        goto done;
+#ifndef TR_HOST_TEST
+    if (overlay_mode) {
+        note("FC27 TR: oyunun gorecegi Turkce dosyalar dogrulaniyor.");
+        char visible[TR_PATH];
+        for (int i = 0; i < TR_ASSET_COUNT; ++i)
+            if (path_join(visible, SM_OVERLAY_RUNTIME, tr_assets[i].path, err) ||
+                bundle_hash_file(visible, tr_assets[i].size, tr_assets[i].sha256hex, err, TR_ERR))
+                goto done;
+        if (path_join(visible, SM_OVERLAY_RUNTIME, "ampr_emu.index", err) ||
+            same_file_bytes(visible, index_patched, index_length, err) ||
+            overlay_source_unchanged(opt, &source, err))
+            goto done;
+    }
+#endif
     result = 0;
     int cleanup_good = 1;
     for (int i = 0; i < TR_ASSET_COUNT + 1; ++i)
@@ -1362,8 +1653,11 @@ static int install(options *opt, char *err) {
             else
                 files[i].backup_owned = 0;
         }
-    note("FC27 TR kurulum tamamlandi: %u dosya, %u indeks kaydi. Oyunda Turkce spikeri secin.",
-         changed_files, changes);
+    if (overlay_mode)
+        note("FC27 TR: %u dosya ve indeks dogrulandi. Oyun baglamasi hazirlaniyor.", changed_files);
+    else
+        note("FC27 TR kurulum tamamlandi: %u dosya, %u indeks kaydi. Oyunda Turkce spikeri secin.",
+             changed_files, changes);
     if (!cleanup_good)
         note("Kurulum dogru; bazi .tr-previous gecici kopyalar temizlenemedi.");
 
@@ -1374,6 +1668,11 @@ done:
         close(lock_fd);
     if (lock_owned && unlink(lock_path))
         note("Kurulum kilidi temizlenemedi: %s", lock_path);
+    if (result && remove_created_dirs())
+        note("Bazi yeni bos klasorler temizlenemedi; oyun dosyalarinin geri alma sonucunu kontrol edin.");
+    free(source.index);
+    free(source.param);
+    free(source_patched);
     free(index_original);
     free(index_patched);
     bundle_close(bundle);
@@ -1387,7 +1686,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signal_cancel);
     signal(SIGTERM, signal_cancel);
     start_log();
-    note("FC27 TR v0.1.1-beta (USB+DATA) baslatiliyor.");
+    note("FC27 TR v0.2.0-beta (KLASOR+GORUNTU) baslatiliyor.");
 #ifdef TR_HOST_TEST
     const char *fail_env = getenv("TR_FAIL_COMMIT");
     if (fail_env) {
@@ -1405,6 +1704,9 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--game") && i + 1 < argc) {
             if (copy_path(opt.game, argv[++i], err))
                 goto error;
+        } else if (!strcmp(argv[i], "--overlay") && i + 1 < argc) {
+            if (copy_path(opt.overlay, argv[++i], err))
+                goto error;
         } else if (!strcmp(argv[i], "--zip") && i + 1 < argc) {
             if (copy_path(opt.zip, argv[++i], err))
                 goto error;
@@ -1418,7 +1720,7 @@ int main(int argc, char **argv) {
             }
             test_fail_rename = (unsigned)value;
         } else {
-            fail(err, "Kullanim: installer --check --game /oyun --zip /paket.zip");
+            fail(err, "Kullanim: installer --check --game /oyun --zip /paket.zip [--overlay /hedef]");
             goto error;
         }
     }
@@ -1427,13 +1729,32 @@ int main(int argc, char **argv) {
     (void)argv;
     if (load_config(&opt, err))
         goto error;
+    if ((!opt.zip[0] && discover_zip(opt.zip, err)) ||
+        prepare_native_target(&opt, err))
+        goto error;
 #endif
     if (install(&opt, err))
         goto error;
+#ifndef TR_HOST_TEST
+    if (image_context_initialized && !opt.check_only) {
+        if (image_context.hooks.wait_stable(image_context.hooks.opaque, image_context.target, err) ||
+            sm_overlay_revalidate(&image_context, err))
+            goto error;
+    }
+    if (cleanup_native_target()) {
+        fail(err, "Dosya islemi bitti ancak baglama temizligi tamamlanamadi; onceki bildirimi kontrol edin.");
+        goto error;
+    }
+    if (opt.overlay[0] && !opt.check_only)
+        note("FC27 TR goruntu kurulumu tamamlandi. Oyunda Turkce spikeri secin.");
+#endif
     if (log_file)
         fclose(log_file);
     return 0;
 error:
+#ifndef TR_HOST_TEST
+    cleanup_native_target();
+#endif
     note("FC27 TR HATA: %s", err[0] ? err : "Bilinmeyen hata. Orijinaller korunuyor.");
     if (log_file)
         fclose(log_file);
