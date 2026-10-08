@@ -1,0 +1,39 @@
+FC27 TR launcher package candidate — local validation, 2026-10-08
+
+Package: UP9000-PPSA99027_00-FCTRINSTALLER001-A0100-V0100.pkg
+Bytes: 1258894
+SHA256: 16b9cb98d1ee8b09805ce002db981cd30347bf45443a8b6377bc257717d59eec
+Embedded installer ELF bytes: 191808
+Embedded installer SHA256: 68afa145186704f44065684a7ab7722f0f1e3269db0a1064fd00afabcb73d048
+Bridge ELF SHA256: eb1ed1fc9fd1979ed87602dbdeab6c1b675eec71d78ec24a9866ae6379b66230
+Bridge SELF SHA256: 8b61df6d1a1e423b0f4c16b020682593cf875880fee7606bcd56184ca5c3d5bf
+Auxiliary SELF SHA256: e120a2a205b81d82e3279a1174e5a1905461aff2e7cf665eff4ab897c5fb01ea
+
+Toolchain: PS5 payload SDK v0.43; .NET SDK 10.0.401 on macOS arm64.
+LibProsperoPKG: 748eabf1b7d17819528cabf367d8e27109d8fce3.
+Build-only changes: portable SHA3 and single-padding inner-reader correction.
+Original pinned library source remains unchanged.
+
+PASS: SHA3 fallback against 25 independent Python hashlib vectors, including
+empty input, abc, one million a bytes, rate and package-block boundaries.
+Byte/span/stream calls, incremental chunks 1/7/135/136/137/4096/65536 bytes,
+and hash reset pass. The host native .NET SHA3 provider reports unsupported.
+
+PASS: debug FIH and CNT structure validation; metadata signature verification.
+PASS: package application filesystem extracted again.
+PASS: recovered bridge SELF equals independently wrapped source bridge.
+PASS: recovered auxiliary SELF equals independently wrapped own right_stub ELF.
+PASS: exactly eboot.bin, sce_sys/about/right.sprx, sce_sys/keystone in inner tree.
+PASS: param.json and icon0.png equal staged application metadata.
+PASS: new installer ELF appears exactly once in bridge bytes.
+PASS: SI ZIP CRC; no personal build path or LAN address in candidate/decoded SI.
+
+NOT TESTED: PS5 package installation acceptance.
+NOT TESTED: launching the installed home-screen tile and sending the ELF.
+NOT TESTED: new privacy-normalized ELF on the console. Its compiled executable
+object sections match the prior console-tested build; two assert-path strings
+were normalized, but this does not substitute for the new console test.
+
+The package has no commentary audio. Commentary ZIP is supplied separately.
+The bridge depends on a working local ELF loader on 127.0.0.1:9021.
+Independent builds may have different PKG hashes due to a random PFS seed.
