@@ -1,0 +1,56 @@
+PASS check mode does not create missing overlay
+PASS read-only source installs to existing overlay
+PASS overlay reinstall is a true no-op
+PASS installed overlay check is a true no-op
+PASS install creates missing overlay parents
+PASS unrelated index difference rejected
+PASS AMPR asset pack in source rejected
+PASS AMPR asset pack in overlay rejected
+PASS invalid AMPR slot size rejected
+PASS invalid AMPR zero slots rejected
+PASS invalid AMPR non-power-two slots rejected
+PASS invalid AMPR too few slots rejected
+PASS unaligned hash table rejected
+PASS existing overlay rollback at rename 1
+PASS existing overlay rollback at rename 2
+PASS existing overlay rollback at rename 3
+PASS existing overlay rollback at rename 4
+PASS existing overlay rollback at rename 5
+PASS existing overlay rollback at rename 6
+PASS existing overlay rollback at rename 7
+PASS existing overlay rollback at rename 8
+PASS existing overlay rollback at rename 9
+PASS existing overlay rollback at rename 10
+PASS existing overlay rollback at rename 11
+PASS existing overlay rollback at rename 12
+PASS existing overlay rollback at rename 13
+PASS existing overlay rollback at rename 14
+PASS existing overlay rollback at rename 15
+PASS existing overlay rollback at rename 16
+PASS existing overlay rollback at rename 17
+PASS existing overlay rollback at rename 18
+PASS existing overlay rollback at rename 19
+PASS existing overlay rollback at rename 20
+PASS existing overlay rollback at rename 21
+PASS existing overlay rollback at rename 22
+PASS new overlay rollback at rename 1
+PASS new overlay rollback at rename 2
+PASS new overlay rollback at rename 3
+PASS new overlay rollback at rename 4
+PASS new overlay rollback at rename 5
+PASS new overlay rollback at rename 6
+PASS new overlay rollback at rename 7
+PASS new overlay rollback at rename 8
+PASS new overlay rollback at rename 9
+PASS new overlay rollback at rename 10
+PASS new overlay rollback at rename 11
+PASS compatible existing overlay index is patched
+PASS source changed before commit is rejected
+PASS final verification includes preexisting correct assets
+PASS source and overlay cannot coincide
+PASS overlay cannot be a source child
+PASS symlink overlay rejected
+PASS cooperative extraction cancelled after 32768 bytes
+PASS ordinary folder install still works
+PASS ordinary folder reinstall is a no-op
+PASS 55 overlay/core cases; generated assets only, no PS5 mount behavior proven.

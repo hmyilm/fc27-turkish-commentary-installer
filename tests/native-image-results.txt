@@ -1,0 +1,18 @@
+ELF SHA256: 63cff8e096e70ae903f888616d603fc872d5cbb18854119c30bfdb3f92de4208
+FW13.20 / ShadowMount1.7beta3 / PPSA34015 v004 / FFPFSC(exFAT)
+FC27 TR v0.2.0-beta (KLASOR+GORUNTU) baslatiliyor.
+FC27 TR: ShadowMount oyun goruntusu kontrol ediliyor.
+FC27 TR: kurulum basladi. Surum 01.000.004.
+FC27 TR: kaynak goruntu degistirilmeden secili overlay klasorune kurulacak.
+FC27 TR: dosyalar dogrulaniyor ve hazirlaniyor: 25%
+FC27 TR: dosyalar dogrulaniyor ve hazirlaniyor: 50%
+FC27 TR: dosyalar dogrulaniyor ve hazirlaniyor: 75%
+FC27 TR: ZIP CRC ve SHA256 dogru. Dosyalar yerlestiriliyor.
+FC27 TR: yerlestirilen dosyalarin SHA256 geri okumasi yapiliyor.
+FC27 TR: oyunun gorecegi Turkce dosyalar dogrulaniyor.
+FC27 TR: 10 dosya ve indeks dogrulandi. Oyun baglamasi hazirlaniyor.
+FC27 TR goruntu kurulumu tamamlandi. Oyunda Turkce spikeri secin.
+
+User confirmed Turkish commentary match after installation.
+Separate fresh mount showed an overlay-only marker; marker removed.
+A later run while FC27 was active was rejected without changes.

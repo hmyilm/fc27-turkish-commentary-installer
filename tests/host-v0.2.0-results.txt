@@ -1,0 +1,10 @@
+PASS 003 check mode performs no writes (0.22s)
+PASS wrong title rejected (0.01s)
+PASS incompatible nonzero index size rejected (0.00s)
+PASS injected mid-commit failure rejected (10.81s)
+PASS rollback restored all ten original asset bytes and complete index
+PASS 003 full installation (15.57s)
+PASS all ten full file SHA256 values and only six u64 index size fields
+PASS 003 repeat installation/noop (4.75s)
+PASS 004 accepted/noop (4.78s)
+PASS host integration suite; this does not prove 003 runtime game compatibility
